@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables & secrets (CRITICAL)
+.env
+.env.local
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+logs/*.log
+
+# Airflow local runtime files
+airflow.cfg
+airflow.db
+standalone_admin_password.txt
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

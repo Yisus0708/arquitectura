@@ -1,0 +1,18 @@
+# Core Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Database Connectivity
+psycopg2-binary>=2.9.0
+SQLAlchemy>=2.0.0
+
+# Configuration & Utilities
+python-dotenv>=1.0.0
+tabulate>=0.9.0
+
+# Quality Assurance & Testing
+pytest>=7.0.0
+
+# Exploration & Interactive Analysis
+ipykernel>=6.0.0
+notebook>=7.0.0
