@@ -107,6 +107,7 @@ menu = st.sidebar.radio(
         "📚 Rendimiento por Materia",
         "👨‍🎓 Ficha de Estudiantes",
         "🏫 Comparativa de Cursos",
+        "📤 Subir Archivo Excel (.xlsx)",
         "🛡️ Auditoría y Calidad (Data Errors)"
     ]
 )
@@ -270,7 +271,56 @@ elif menu == "🏫 Comparativa de Cursos":
 
 
 # -----------------------------------------------------------------------------
-# 5. AUDITORÍA Y CALIDAD DE DATOS (DATA ERRORS)
+# 5. SUBIR ARCHIVO EXCEL (.XLSX)
+# -----------------------------------------------------------------------------
+elif menu == "📤 Subir Archivo Excel (.xlsx)":
+    st.title("📤 Ingesta Directa de Archivo Excel (.xlsx)")
+    st.markdown("""
+    Carga tu archivo de calificaciones en formato Excel. El pipeline extraerá automáticamente las hojas,
+    aplicará validaciones de calidad, aislará registros con inconsistencias en `data/errors/` y
+    actualizará el modelo analítico en PostgreSQL (`school_dw`) en tiempo real.
+    """)
+
+    from src.ingestion.excel_handler import create_excel_template, process_uploaded_excel_file
+
+    col_info, col_dl = st.columns([3, 1])
+    with col_info:
+        st.info("💡 **Hojas requeridas**: `cursos`, `materias`, `estudiantes`, `evaluaciones`, `calificaciones`.")
+    with col_dl:
+        template_bytes = create_excel_template()
+        st.download_button(
+            label="📥 Descargar Plantilla Excel",
+            data=template_bytes,
+            file_name="plantilla_calificaciones.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
+        )
+
+    st.divider()
+
+    uploaded_file = st.file_uploader(
+        "Arrastra o selecciona un archivo Excel (.xlsx o .xls):",
+        type=["xlsx", "xls"]
+    )
+
+    if uploaded_file is not None:
+        st.success(f"Archivo cargado: **{uploaded_file.name}** ({round(uploaded_file.size / 1024, 1)} KB)")
+
+        if st.button("🚀 Procesar Archivo y Ejecutar Pipeline", type="primary"):
+            with st.spinner("Procesando hojas de cálculo, validando calidad y actualizando PostgreSQL..."):
+                try:
+                    summary = process_uploaded_excel_file(uploaded_file.getvalue())
+                    st.cache_data.clear()
+                    st.success("🎉 ¡Archivo Excel procesado y pipeline ejecutado exitosamente!")
+                    st.write("**Hojas importadas:**", ", ".join(summary["sheets_imported"]))
+                    st.write("**Filas importadas:**", summary["rows_imported"])
+                    st.info("Ve a la pestaña '🏛️ Resumen Ejecutivo' o '📚 Rendimiento por Materia' para ver los datos actualizados.")
+                except Exception as err:
+                    st.error(f"❌ Error al procesar el archivo: {err}")
+
+
+# -----------------------------------------------------------------------------
+# 6. AUDITORÍA Y CALIDAD DE DATOS (DATA ERRORS)
 # -----------------------------------------------------------------------------
 elif menu == "🛡️ Auditoría y Calidad (Data Errors)":
     st.title("🛡️ Auditoría de Calidad de Datos y Cuarentena")
