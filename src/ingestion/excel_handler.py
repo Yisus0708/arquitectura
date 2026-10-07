@@ -117,8 +117,13 @@ def format_date_cell(val: Any) -> Any:
     if isinstance(val, (datetime, date, pd.Timestamp)):
         return val.strftime("%Y-%m-%d")
     val_str = str(val).strip()
-    # Check if string matches standard date formats
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%d-%m-%Y"):
+    # Check if string matches standard date formats including timestamps
+    for fmt in (
+        "%Y-%m-%d %H:%M:%S", "%Y-%m-%d",
+        "%d/%m/%Y %H:%M:%S", "%d/%m/%Y",
+        "%Y/%m/%d %H:%M:%S", "%Y/%m/%d",
+        "%d-%m-%Y %H:%M:%S", "%d-%m-%Y"
+    ):
         try:
             dt = datetime.strptime(val_str, fmt)
             return dt.strftime("%Y-%m-%d")

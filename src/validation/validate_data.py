@@ -37,7 +37,12 @@ def is_valid_date(val: Any) -> bool:
     val_str = str(val).strip()
     if not val_str:
         return False
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%d-%m-%Y"):
+    for fmt in (
+        "%Y-%m-%d %H:%M:%S", "%Y-%m-%d",
+        "%d/%m/%Y %H:%M:%S", "%d/%m/%Y",
+        "%Y/%m/%d %H:%M:%S", "%Y/%m/%d",
+        "%d-%m-%Y %H:%M:%S", "%d-%m-%Y"
+    ):
         try:
             datetime.strptime(val_str, fmt)
             return True
@@ -51,7 +56,12 @@ def parse_date(val: Any) -> Optional[datetime]:
     if pd.isnull(val):
         return None
     val_str = str(val).strip()
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%d-%m-%Y"):
+    for fmt in (
+        "%Y-%m-%d %H:%M:%S", "%Y-%m-%d",
+        "%d/%m/%Y %H:%M:%S", "%d/%m/%Y",
+        "%Y/%m/%d %H:%M:%S", "%Y/%m/%d",
+        "%d-%m-%Y %H:%M:%S", "%d-%m-%Y"
+    ):
         try:
             return datetime.strptime(val_str, fmt)
         except (ValueError, TypeError):

@@ -32,7 +32,7 @@ from src.transformation.transform_gold import run_gold_transformations
 logger = get_logger("pipeline_runner")
 
 
-def execute_pipeline() -> bool:
+def execute_pipeline(generate_data: bool = False) -> bool:
     start_time = time.time()
     logger.info("============================================================================")
     logger.info("   INICIANDO EJECUCIÓN END-TO-END DEL PIPELINE DE CALIFICACIONES ESCOLARES   ")
@@ -40,13 +40,18 @@ def execute_pipeline() -> bool:
 
     stages = [
         ("0. Verificación de BD y Esquemas Medallion", lambda: (ensure_database_exists(), ensure_schemas_exist())),
-        ("1. Ingesta y Generación de Datos Sintéticos", run_generation),
+    ]
+
+    if generate_data:
+        stages.append(("1. Ingesta y Generación de Datos Sintéticos", run_generation))
+
+    stages.extend([
         ("2. Validación de Calidad y Cuarentena de Errores", run_validation),
         ("3. Carga Idempotente a PostgreSQL Raw", load_all_raw),
         ("4. Transformación y Limpieza a Staging", run_staging_transformations),
         ("5. Construcción de Capa Relacional Silver", run_silver_transformations),
         ("6. Construcción de Modelo Estrella y Marts Gold", run_gold_transformations),
-    ]
+    ])
 
     for stage_name, stage_fn in stages:
         logger.info(f"\n>>> INICIANDO ETAPA: {stage_name}")
