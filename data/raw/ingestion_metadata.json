@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-10-07T08:23:28.247400",
+    "generated_at": "2026-10-07T08:53:37.634212",
     "random_seed": 42,
     "scale": "0.0 - 5.0 (passing >= 3.0)",
     "files": {
@@ -58,7 +58,7 @@
         },
         "grades.csv": {
             "path": "data\\raw\\grades.csv",
-            "row_count": 1627,
+            "row_count": 1607,
             "columns": [
                 "grade_id",
                 "assessment_id",
@@ -67,8 +67,8 @@
                 "submission_date",
                 "feedback"
             ],
-            "size_bytes": 161639,
-            "sha256": "590757a372951729ad631aa4ec9d5a186b350ad0eb443a02fb21c49912dacadd"
+            "size_bytes": 159675,
+            "sha256": "53ec17862c46740c4b2a017e64985447af89d39ea40da86436a95871d0c40d95"
         }
     }
 }

@@ -1,88 +1,88 @@
 grade_id,assessment_id,student_id,score,submission_date,feedback,error_reason
-GRD-01623,EVAL-SUB-FIS-10A-01,EST-003,,2026-03-30,Falta registro de nota.,Null value in mandatory column: score
+GRD-01603,EVAL-SUB-FIS-10A-01,EST-003,,2026-03-30,Falta registro de nota.,Null value in mandatory column: score
 GRD-00001,EVAL-SUB-MAT-10A-01,EST-001,4.0,2026-03-30,Registro duplicado intencional.,Duplicate grade_id primary key: GRD-00001
-GRD-01621,EVAL-SUB-MAT-10A-01,EST-001,6.8,2026-03-30,Nota errónea fuera de escala.,Grade score 6.8 out of allowed scale [0.0 - 5.0]
-GRD-01622,EVAL-SUB-MAT-10A-02,EST-002,-1.5,2026-03-30,Nota negativa inválida.,Grade score -1.5 out of allowed scale [0.0 - 5.0]
-GRD-01624,EVAL-SUB-MAT-10A-01,EST-999,3.8,2026-03-30,Estudiante inexistente.,Foreign key violation: student_id 'EST-999' does not exist
-GRD-01237,EVAL-SUB-ING-11B-01,EST-004,3.2,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01238,EVAL-SUB-ING-11B-02,EST-004,3.1,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01239,EVAL-SUB-ING-11B-03,EST-004,3.9,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01240,EVAL-SUB-ING-11B-04,EST-004,4.4,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01257,EVAL-SUB-ING-11B-01,EST-008,4.2,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01258,EVAL-SUB-ING-11B-02,EST-008,4.3,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01259,EVAL-SUB-ING-11B-03,EST-008,3.9,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01260,EVAL-SUB-ING-11B-04,EST-008,4.7,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01277,EVAL-SUB-ING-11B-01,EST-012,3.0,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01278,EVAL-SUB-ING-11B-02,EST-012,3.1,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01279,EVAL-SUB-ING-11B-03,EST-012,2.4,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01280,EVAL-SUB-ING-11B-04,EST-012,2.8,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01297,EVAL-SUB-ING-11B-01,EST-016,2.6,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01298,EVAL-SUB-ING-11B-02,EST-016,2.6,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01299,EVAL-SUB-ING-11B-03,EST-016,3.5,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01300,EVAL-SUB-ING-11B-04,EST-016,2.2,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01317,EVAL-SUB-ING-11B-01,EST-020,2.7,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01318,EVAL-SUB-ING-11B-02,EST-020,2.9,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01319,EVAL-SUB-ING-11B-03,EST-020,2.8,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01320,EVAL-SUB-ING-11B-04,EST-020,3.3,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01337,EVAL-SUB-ING-11B-01,EST-024,4.6,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01338,EVAL-SUB-ING-11B-02,EST-024,4.7,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01339,EVAL-SUB-ING-11B-03,EST-024,4.1,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01340,EVAL-SUB-ING-11B-04,EST-024,3.6,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01357,EVAL-SUB-ING-11B-01,EST-028,3.2,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01358,EVAL-SUB-ING-11B-02,EST-028,3.4,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01359,EVAL-SUB-ING-11B-03,EST-028,3.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01360,EVAL-SUB-ING-11B-04,EST-028,3.6,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01377,EVAL-SUB-ING-11B-01,EST-032,3.0,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01378,EVAL-SUB-ING-11B-02,EST-032,3.1,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01379,EVAL-SUB-ING-11B-03,EST-032,2.3,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01380,EVAL-SUB-ING-11B-04,EST-032,2.3,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01397,EVAL-SUB-ING-11B-01,EST-036,3.6,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01398,EVAL-SUB-ING-11B-02,EST-036,2.6,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01399,EVAL-SUB-ING-11B-03,EST-036,3.2,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01400,EVAL-SUB-ING-11B-04,EST-036,3.8,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01417,EVAL-SUB-ING-11B-01,EST-040,3.6,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01418,EVAL-SUB-ING-11B-02,EST-040,2.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01419,EVAL-SUB-ING-11B-03,EST-040,3.2,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01420,EVAL-SUB-ING-11B-04,EST-040,3.7,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01437,EVAL-SUB-ING-11B-01,EST-044,3.2,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01438,EVAL-SUB-ING-11B-02,EST-044,2.6,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01439,EVAL-SUB-ING-11B-03,EST-044,3.0,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01440,EVAL-SUB-ING-11B-04,EST-044,2.4,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01457,EVAL-SUB-ING-11B-01,EST-048,3.0,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01458,EVAL-SUB-ING-11B-02,EST-048,3.4,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01459,EVAL-SUB-ING-11B-03,EST-048,3.1,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01460,EVAL-SUB-ING-11B-04,EST-048,3.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01477,EVAL-SUB-ING-11B-01,EST-052,3.7,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01478,EVAL-SUB-ING-11B-02,EST-052,3.2,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01479,EVAL-SUB-ING-11B-03,EST-052,3.7,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01480,EVAL-SUB-ING-11B-04,EST-052,3.9,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01497,EVAL-SUB-ING-11B-01,EST-056,3.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01498,EVAL-SUB-ING-11B-02,EST-056,3.4,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01499,EVAL-SUB-ING-11B-03,EST-056,3.5,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01500,EVAL-SUB-ING-11B-04,EST-056,3.4,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01517,EVAL-SUB-ING-11B-01,EST-060,2.9,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01518,EVAL-SUB-ING-11B-02,EST-060,4.1,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01519,EVAL-SUB-ING-11B-03,EST-060,4.1,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01520,EVAL-SUB-ING-11B-04,EST-060,2.9,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01537,EVAL-SUB-ING-11B-01,EST-064,3.3,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01538,EVAL-SUB-ING-11B-02,EST-064,3.3,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01539,EVAL-SUB-ING-11B-03,EST-064,3.9,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01540,EVAL-SUB-ING-11B-04,EST-064,3.3,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01557,EVAL-SUB-ING-11B-01,EST-068,5.0,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01558,EVAL-SUB-ING-11B-02,EST-068,4.6,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01559,EVAL-SUB-ING-11B-03,EST-068,5.0,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01560,EVAL-SUB-ING-11B-04,EST-068,3.7,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01577,EVAL-SUB-ING-11B-01,EST-072,3.2,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01578,EVAL-SUB-ING-11B-02,EST-072,3.0,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01579,EVAL-SUB-ING-11B-03,EST-072,2.4,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01580,EVAL-SUB-ING-11B-04,EST-072,2.9,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01597,EVAL-SUB-ING-11B-01,EST-076,5.0,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01598,EVAL-SUB-ING-11B-02,EST-076,5.0,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01599,EVAL-SUB-ING-11B-03,EST-076,4.9,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01600,EVAL-SUB-ING-11B-04,EST-076,4.6,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01617,EVAL-SUB-ING-11B-01,EST-080,3.9,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
-GRD-01618,EVAL-SUB-ING-11B-02,EST-080,3.2,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
-GRD-01619,EVAL-SUB-ING-11B-03,EST-080,4.0,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
-GRD-01620,EVAL-SUB-ING-11B-04,EST-080,3.9,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
-GRD-01625,EVAL-NONEXISTENT-99,EST-001,4.5,2026-03-30,Evaluación inexistente.,Foreign key violation: assessment_id 'EVAL-NONEXISTENT-99' does not exist or was rejected
-GRD-01626,EVAL-SUB-MAT-10A-01,EST-004,3.5,2026-99-99,Fecha corrupta.,Invalid submission_date format: 2026-99-99
+GRD-01601,EVAL-SUB-MAT-10A-01,EST-001,6.8,2026-03-30,Nota errónea fuera de escala.,Grade score 6.8 out of allowed scale [0.0 - 5.0]
+GRD-01602,EVAL-SUB-MAT-10A-02,EST-002,-1.5,2026-03-30,Nota negativa inválida.,Grade score -1.5 out of allowed scale [0.0 - 5.0]
+GRD-01604,EVAL-SUB-MAT-10A-01,EST-999,3.8,2026-03-30,Estudiante inexistente.,Foreign key violation: student_id 'EST-999' does not exist
+GRD-01217,EVAL-SUB-ING-11B-01,EST-004,1.8,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01218,EVAL-SUB-ING-11B-02,EST-004,2.8,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01219,EVAL-SUB-ING-11B-03,EST-004,1.3,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01220,EVAL-SUB-ING-11B-04,EST-004,2.9,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01237,EVAL-SUB-ING-11B-01,EST-008,3.2,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01238,EVAL-SUB-ING-11B-02,EST-008,3.1,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01239,EVAL-SUB-ING-11B-03,EST-008,3.9,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01240,EVAL-SUB-ING-11B-04,EST-008,4.4,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01257,EVAL-SUB-ING-11B-01,EST-012,4.2,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01258,EVAL-SUB-ING-11B-02,EST-012,4.3,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01259,EVAL-SUB-ING-11B-03,EST-012,3.9,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01260,EVAL-SUB-ING-11B-04,EST-012,4.7,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01277,EVAL-SUB-ING-11B-01,EST-016,3.0,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01278,EVAL-SUB-ING-11B-02,EST-016,3.1,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01279,EVAL-SUB-ING-11B-03,EST-016,2.4,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01280,EVAL-SUB-ING-11B-04,EST-016,2.8,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01297,EVAL-SUB-ING-11B-01,EST-020,2.6,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01298,EVAL-SUB-ING-11B-02,EST-020,2.6,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01299,EVAL-SUB-ING-11B-03,EST-020,3.5,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01300,EVAL-SUB-ING-11B-04,EST-020,2.2,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01317,EVAL-SUB-ING-11B-01,EST-024,2.7,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01318,EVAL-SUB-ING-11B-02,EST-024,2.9,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01319,EVAL-SUB-ING-11B-03,EST-024,2.8,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01320,EVAL-SUB-ING-11B-04,EST-024,3.3,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01337,EVAL-SUB-ING-11B-01,EST-028,4.6,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01338,EVAL-SUB-ING-11B-02,EST-028,4.7,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01339,EVAL-SUB-ING-11B-03,EST-028,4.1,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01340,EVAL-SUB-ING-11B-04,EST-028,3.6,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01357,EVAL-SUB-ING-11B-01,EST-032,3.2,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01358,EVAL-SUB-ING-11B-02,EST-032,3.4,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01359,EVAL-SUB-ING-11B-03,EST-032,3.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01360,EVAL-SUB-ING-11B-04,EST-032,3.6,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01377,EVAL-SUB-ING-11B-01,EST-036,3.0,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01378,EVAL-SUB-ING-11B-02,EST-036,3.1,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01379,EVAL-SUB-ING-11B-03,EST-036,2.3,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01380,EVAL-SUB-ING-11B-04,EST-036,2.3,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01397,EVAL-SUB-ING-11B-01,EST-040,3.6,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01398,EVAL-SUB-ING-11B-02,EST-040,2.6,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01399,EVAL-SUB-ING-11B-03,EST-040,3.2,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01400,EVAL-SUB-ING-11B-04,EST-040,3.8,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01417,EVAL-SUB-ING-11B-01,EST-044,3.6,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01418,EVAL-SUB-ING-11B-02,EST-044,2.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01419,EVAL-SUB-ING-11B-03,EST-044,3.2,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01420,EVAL-SUB-ING-11B-04,EST-044,3.7,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01437,EVAL-SUB-ING-11B-01,EST-048,3.2,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01438,EVAL-SUB-ING-11B-02,EST-048,2.6,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01439,EVAL-SUB-ING-11B-03,EST-048,3.0,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01440,EVAL-SUB-ING-11B-04,EST-048,2.4,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01457,EVAL-SUB-ING-11B-01,EST-052,3.0,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01458,EVAL-SUB-ING-11B-02,EST-052,3.4,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01459,EVAL-SUB-ING-11B-03,EST-052,3.1,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01460,EVAL-SUB-ING-11B-04,EST-052,3.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01477,EVAL-SUB-ING-11B-01,EST-056,3.7,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01478,EVAL-SUB-ING-11B-02,EST-056,3.2,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01479,EVAL-SUB-ING-11B-03,EST-056,3.7,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01480,EVAL-SUB-ING-11B-04,EST-056,3.9,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01497,EVAL-SUB-ING-11B-01,EST-060,3.5,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01498,EVAL-SUB-ING-11B-02,EST-060,3.4,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01499,EVAL-SUB-ING-11B-03,EST-060,3.5,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01500,EVAL-SUB-ING-11B-04,EST-060,3.4,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01517,EVAL-SUB-ING-11B-01,EST-064,2.9,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01518,EVAL-SUB-ING-11B-02,EST-064,4.1,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01519,EVAL-SUB-ING-11B-03,EST-064,4.1,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01520,EVAL-SUB-ING-11B-04,EST-064,2.9,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01537,EVAL-SUB-ING-11B-01,EST-068,3.3,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01538,EVAL-SUB-ING-11B-02,EST-068,3.3,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01539,EVAL-SUB-ING-11B-03,EST-068,3.9,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01540,EVAL-SUB-ING-11B-04,EST-068,3.3,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01557,EVAL-SUB-ING-11B-01,EST-072,5.0,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01558,EVAL-SUB-ING-11B-02,EST-072,4.6,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01559,EVAL-SUB-ING-11B-03,EST-072,5.0,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01560,EVAL-SUB-ING-11B-04,EST-072,3.7,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01577,EVAL-SUB-ING-11B-01,EST-076,3.2,2026-03-30,Muy buen análisis y resolución metodológica.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01578,EVAL-SUB-ING-11B-02,EST-076,3.0,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01579,EVAL-SUB-ING-11B-03,EST-076,2.4,2026-03-30,"Aprobado, profundizar en temas teóricos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01580,EVAL-SUB-ING-11B-04,EST-076,2.9,2026-03-30,"Buen trabajo, repasar ejercicios prácticos.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01597,EVAL-SUB-ING-11B-01,EST-080,5.0,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-01' does not exist or was rejected
+GRD-01598,EVAL-SUB-ING-11B-02,EST-080,5.0,2026-03-30,"Insuficiente, programar plan de mejoramiento.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-02' does not exist or was rejected
+GRD-01599,EVAL-SUB-ING-11B-03,EST-080,4.9,2026-03-30,"Desempeño bajo, requiere tutoría académica.",Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-03' does not exist or was rejected
+GRD-01600,EVAL-SUB-ING-11B-04,EST-080,4.6,2026-03-30,Excelente dominio de los conceptos.,Foreign key violation: assessment_id 'EVAL-SUB-ING-11B-04' does not exist or was rejected
+GRD-01605,EVAL-NONEXISTENT-99,EST-001,4.5,2026-03-30,Evaluación inexistente.,Foreign key violation: assessment_id 'EVAL-NONEXISTENT-99' does not exist or was rejected
+GRD-01606,EVAL-SUB-MAT-10A-01,EST-004,3.5,2026-99-99,Fecha corrupta.,Invalid submission_date format: 2026-99-99

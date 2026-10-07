@@ -78,6 +78,7 @@ CREATE TABLE silver.grades (
         REFERENCES silver.assessments (assessment_id) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_grades_student FOREIGN KEY (student_id)
         REFERENCES silver.students (student_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uq_grades_assessment_student UNIQUE (assessment_id, student_id),
     CONSTRAINT chk_grade_score CHECK (score >= 0.0 AND score <= 5.0)
 );
 

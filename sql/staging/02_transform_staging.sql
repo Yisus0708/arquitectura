@@ -130,7 +130,7 @@ WITH clean_grades AS (
         CAST(TRIM(g.score) AS NUMERIC(3,1)) AS score,
         CAST(TRIM(g.submission_date) AS DATE) AS submission_date,
         TRIM(g.feedback) AS feedback,
-        ROW_NUMBER() OVER(PARTITION BY TRIM(g.grade_id) ORDER BY g._loaded_at ASC) AS rn
+        ROW_NUMBER() OVER(PARTITION BY TRIM(g.assessment_id), TRIM(g.student_id) ORDER BY g.grade_id ASC, g._loaded_at ASC) AS rn
     FROM raw.grades g
     INNER JOIN staging.students st ON TRIM(g.student_id) = st.student_id
     INNER JOIN staging.assessments ev ON TRIM(g.assessment_id) = ev.assessment_id

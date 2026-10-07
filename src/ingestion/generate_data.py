@@ -230,13 +230,10 @@ def generate_grades(
     grades = []
     grade_counter = 1
 
-    # Map course_id -> list of students (only valid students from base list)
-    valid_students = students_df[
-        students_df["student_id"].str.startswith("EST-") &
-        (students_df["student_id"] <= "EST-080")
-    ]
+    # Map course_id -> list of students (only base clean unique students)
+    clean_students = students_df.iloc[:80].copy()
     course_to_students = {}
-    for _, st in valid_students.iterrows():
+    for _, st in clean_students.iterrows():
         c_id = st["course_id"]
         course_to_students.setdefault(c_id, []).append(st["student_id"])
 
