@@ -1,0 +1,8 @@
+assessment_id,subject_id,assessment_name,assessment_type,weight_percentage,assessment_date,error_reason
+EVAL-ERR-03,SUB-FIS-10A,,Taller,10.0,2026-03-10,Null value in mandatory column: assessment_name
+EVAL-ERR-01,SUB-MAT-10A,Evaluación Peso Excesivo,Parcial,150.0,2026-03-01,Weight percentage out of range [0-100%]: 150.0
+EVAL-ERR-02,SUB-MAT-10A,Evaluación Peso Negativo,Quiz,-15.0,2026-03-05,Weight percentage out of range [0-100%]: -15.0
+EVAL-SUB-ING-11B-01,SUB-ING-11B,Taller Práctico 1,Taller,15.0,2026-02-20,"Subject assessment weights sum to 115.0%, expected 100.0%"
+EVAL-SUB-ING-11B-02,SUB-ING-11B,Parcial Teórico 1,Parcial,30.0,2026-03-25,"Subject assessment weights sum to 115.0%, expected 100.0%"
+EVAL-SUB-ING-11B-03,SUB-ING-11B,Quiz Diagnóstico,Quiz,15.0,2026-04-18,"Subject assessment weights sum to 115.0%, expected 100.0%"
+EVAL-SUB-ING-11B-04,SUB-ING-11B,Examen Final Semestral,Examen Final,55.0,2026-05-28,"Subject assessment weights sum to 115.0%, expected 100.0%"
