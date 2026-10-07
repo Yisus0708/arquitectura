@@ -1,0 +1,74 @@
+{
+    "generated_at": "2026-10-07T08:23:28.247400",
+    "random_seed": 42,
+    "scale": "0.0 - 5.0 (passing >= 3.0)",
+    "files": {
+        "courses.csv": {
+            "path": "data\\raw\\courses.csv",
+            "row_count": 4,
+            "columns": [
+                "course_id",
+                "course_name",
+                "grade_level",
+                "academic_year"
+            ],
+            "size_bytes": 161,
+            "sha256": "98c5420adde9b771315038818167560862ed22be9fb8c7c6700056d919f20ba9"
+        },
+        "subjects.csv": {
+            "path": "data\\raw\\subjects.csv",
+            "row_count": 20,
+            "columns": [
+                "subject_id",
+                "subject_name",
+                "course_id",
+                "department"
+            ],
+            "size_bytes": 1106,
+            "sha256": "7ed3c32725c5c0dccca416dbcc1b9e6c351756b47984523ecb5a6bf3ebfd07cd"
+        },
+        "students.csv": {
+            "path": "data\\raw\\students.csv",
+            "row_count": 83,
+            "columns": [
+                "student_id",
+                "first_name",
+                "last_name",
+                "email",
+                "course_id",
+                "enrollment_date",
+                "status"
+            ],
+            "size_bytes": 6946,
+            "sha256": "2b37415d75e748477c2c70fccfb14ba4fc65584847668557bc91b3342fefd5c3"
+        },
+        "assessments.csv": {
+            "path": "data\\raw\\assessments.csv",
+            "row_count": 83,
+            "columns": [
+                "assessment_id",
+                "subject_id",
+                "assessment_name",
+                "assessment_type",
+                "weight_percentage",
+                "assessment_date"
+            ],
+            "size_bytes": 6450,
+            "sha256": "bdfd2f36ccc2dad6aeadc866c82520b29b0b8c6dfbabcb81af7c3f0462622791"
+        },
+        "grades.csv": {
+            "path": "data\\raw\\grades.csv",
+            "row_count": 1627,
+            "columns": [
+                "grade_id",
+                "assessment_id",
+                "student_id",
+                "score",
+                "submission_date",
+                "feedback"
+            ],
+            "size_bytes": 161639,
+            "sha256": "590757a372951729ad631aa4ec9d5a186b350ad0eb443a02fb21c49912dacadd"
+        }
+    }
+}
