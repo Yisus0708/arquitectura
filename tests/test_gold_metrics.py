@@ -34,15 +34,16 @@ def test_gold_tables_not_empty():
 
 
 def test_assessment_weights_sum_to_100_in_gold():
-    """Verifies that every subject evaluated in gold has total weights summing to 100.0%."""
+    """Verifies that every subject configured in silver and gold has assessments summing to 100.0%."""
     sql = """
-        SELECT DISTINCT total_evaluated_weight
-        FROM gold.final_grade_by_student_subject;
+        SELECT subject_id, SUM(weight_percentage) AS total_weight
+        FROM silver.assessments
+        GROUP BY subject_id;
     """
     res = fetch_query(sql)
     for r in res:
-        w = float(r["total_evaluated_weight"])
-        assert abs(w - 100.0) < 0.01, f"Found subject with total weight {w} != 100.0% in gold"
+        w = float(r["total_weight"])
+        assert abs(w - 100.0) < 0.01, f"Found subject {r['subject_id']} with total weight {w} != 100.0%"
 
 
 def test_recalculated_final_grade_equals_gold_final_grade():

@@ -71,7 +71,7 @@ def get_metrics():
                 "total_students": total_students,
                 "average_gpa": avg_gpa,
                 "pass_rate_percentage": pass_rate,
-                "fail_rate_percentage": round(100.0 - pass_rate, 2),
+                "fail_rate_percentage": round(100.0 - pass_rate, 2) if total_evals else 0.0,
                 "total_evaluations": total_evals,
                 "total_subjects": len(subjects)
             },
@@ -174,6 +174,32 @@ def generate_synthetic_api():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/reset-data", response_class=JSONResponse)
+def reset_data_api():
+    """Truncates all tables in PostgreSQL and clears errors, leaving the system in a clean blank state."""
+    try:
+        from src.utils.db import execute_query
+        truncate_sql = """
+            TRUNCATE TABLE raw.grades, raw.assessments, raw.students, raw.subjects, raw.courses CASCADE;
+            TRUNCATE TABLE staging.grades, staging.assessments, staging.students, staging.subjects, staging.courses CASCADE;
+            TRUNCATE TABLE silver.grades, silver.assessments, silver.students, silver.subjects, silver.courses CASCADE;
+            TRUNCATE TABLE gold.fact_grades, gold.dim_student, gold.dim_subject, gold.dim_course, gold.dim_date CASCADE;
+            TRUNCATE TABLE gold.final_grade_by_student_subject, gold.subject_performance, gold.student_performance,
+                           gold.course_performance, gold.assessment_type_performance, gold.top_bottom_students,
+                           gold.subjects_highest_failure CASCADE;
+        """
+        execute_query(truncate_sql)
+
+        # Clear error files
+        for f in ERRORS_DATA_DIR.glob("*_errors.csv"):
+            if f.is_file():
+                pd.DataFrame(columns=["error_reason"]).to_csv(f, index=False)
+
+        return {"status": "success", "message": "Base de datos y archivos reiniciados con éxito. La plataforma está totalmente en blanco."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/", response_class=HTMLResponse)
 def get_dashboard_html():
     """Serves the complete interactive HTML/Tailwind/Chart.js Single Page Dashboard."""
@@ -216,8 +242,13 @@ def get_dashboard_html():
             <div class="flex items-center space-x-3">
                 <a href="/api/download-template" download="plantilla_calificaciones.xlsx"
                    class="inline-flex items-center px-3 py-1.5 border border-emerald-600 text-xs font-medium rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition shadow-sm">
-                    <i class="fa-solid fa-file-excel mr-1.5 text-emerald-600"></i> Descargar Plantilla Excel
+                    <i class="fa-solid fa-file-excel mr-1.5 text-emerald-600"></i> Descargar Plantilla
                 </a>
+                <button onclick="confirmResetData()"
+                        class="inline-flex items-center px-3 py-1.5 border border-rose-300 text-xs font-medium rounded-md text-rose-700 bg-rose-50 hover:bg-rose-100 transition shadow-sm"
+                        title="Vaciar base de datos y reiniciar la plataforma a blanco">
+                    <i class="fa-solid fa-trash-can mr-1.5 text-rose-500"></i> Reiniciar a Blanco
+                </button>
                 <button onclick="triggerRunPipeline()"
                         class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-xs font-medium rounded-md text-white hover:bg-blue-700 transition shadow-sm">
                     <i class="fa-solid fa-play mr-1.5"></i> Ejecutar Pipeline
@@ -264,8 +295,32 @@ def get_dashboard_html():
         <!-- TAB 1: RESUMEN EJECUTIVO -->
         <!-- ============================================================== -->
         <section id="section-resumen" class="space-y-6">
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Empty State Hero Banner -->
+            <div id="emptyStateBanner" class="hidden bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-sm">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+                    <i class="fa-solid fa-file-excel"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Plataforma en Blanco (Lista para Ingesta)</h3>
+                <p class="text-slate-500 text-sm max-w-xl mx-auto mb-6">
+                    No hay datos cargados en el Data Warehouse en este momento. Puedes subir cualquier archivo Excel (.xlsx) con los datos académicos de un colegio o descargar nuestra plantilla estructurada.
+                </p>
+                <div class="flex justify-center flex-wrap gap-3">
+                    <button onclick="switchTab('subir-excel')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md transition inline-flex items-center">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Subir Archivo Excel
+                    </button>
+                    <a href="/api/download-template" download="plantilla_calificaciones.xlsx" class="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs rounded-xl shadow-sm transition inline-flex items-center">
+                        <i class="fa-solid fa-file-excel mr-2 text-emerald-600"></i> Descargar Plantilla
+                    </a>
+                    <button onclick="generateSynthetic()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-xl shadow-md transition inline-flex items-center">
+                        <i class="fa-solid fa-dice mr-2"></i> Generar Datos Demo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area (KPIs + Charts + Tables) -->
+            <div id="dataContentArea" class="space-y-6">
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estudiantes Activos</p>
@@ -373,6 +428,7 @@ def get_dashboard_html():
                         </table>
                     </div>
                 </div>
+            </div>
             </div>
         </section>
 
@@ -590,6 +646,18 @@ def get_dashboard_html():
 
         function renderMetrics(data) {
             const kpi = data.kpis;
+            const emptyBanner = document.getElementById("emptyStateBanner");
+            const dataContent = document.getElementById("dataContentArea");
+
+            if (!kpi || kpi.total_students === 0) {
+                if (emptyBanner) emptyBanner.classList.remove("hidden");
+                if (dataContent) dataContent.classList.add("hidden");
+                return;
+            } else {
+                if (emptyBanner) emptyBanner.classList.add("hidden");
+                if (dataContent) dataContent.classList.remove("hidden");
+            }
+
             document.getElementById("kpi-students").innerText = kpi.total_students;
             document.getElementById("kpi-gpa").innerText = kpi.average_gpa + " / 5.0";
             document.getElementById("kpi-pass-rate").innerText = kpi.pass_rate_percentage + "%";
@@ -602,21 +670,29 @@ def get_dashboard_html():
             topTbody.innerHTML = "";
             bottomTbody.innerHTML = "";
 
-            data.top_bottom.forEach(item => {
-                const isTop = item.cohort_group.includes("Top");
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td class="py-2 px-3 font-bold ${isTop ? 'text-emerald-600' : 'text-rose-600'}">#${item.ranking_position}</td>
-                    <td class="py-2 px-3 font-semibold text-slate-800">${item.full_name}</td>
-                    <td class="py-2 px-3">${item.course_name}</td>
-                    <td class="py-2 px-3 text-right font-bold">${Number(item.overall_average).toFixed(2)}</td>
-                `;
-                if (isTop) topTbody.appendChild(row);
-                else bottomTbody.appendChild(row);
-            });
+            if (data.top_bottom && data.top_bottom.length > 0) {
+                data.top_bottom.forEach(item => {
+                    const isTop = item.cohort_group.includes("Top");
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td class="py-2 px-3 font-bold ${isTop ? 'text-emerald-600' : 'text-rose-600'}">#${item.ranking_position}</td>
+                        <td class="py-2 px-3 font-semibold text-slate-800">${item.full_name}</td>
+                        <td class="py-2 px-3">${item.course_name}</td>
+                        <td class="py-2 px-3 text-right font-bold">${Number(item.overall_average).toFixed(2)}</td>
+                    `;
+                    if (isTop) topTbody.appendChild(row);
+                    else bottomTbody.appendChild(row);
+                });
+            }
         }
 
         function renderCharts(data) {
+            if (!data.kpis || data.kpis.total_students === 0 || !data.courses || data.courses.length === 0) {
+                if (coursesChart) { coursesChart.destroy(); coursesChart = null; }
+                if (approvalChart) { approvalChart.destroy(); approvalChart = null; }
+                return;
+            }
+
             // 1. Courses GPA Chart
             const ctxCourses = document.getElementById("chartCourses").getContext("2d");
             const courseLabels = data.courses.map(c => c.course_name);
@@ -669,6 +745,10 @@ def get_dashboard_html():
         function renderSubjects(subjects) {
             const tbody = document.getElementById("subjectsTableBody");
             tbody.innerHTML = "";
+            if (!subjects || subjects.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-medium">No hay materias cargadas. Sube un archivo Excel para comenzar.</td></tr>`;
+                return;
+            }
             subjects.forEach(s => {
                 const tr = document.createElement("tr");
                 const failRate = Number(s.fail_rate_percentage);
@@ -929,6 +1009,39 @@ def get_dashboard_html():
                 errorsData = null;
             } catch (err) {
                 showToast("Fallo al ejecutar pipeline: " + err.message, "error");
+            }
+        }
+
+        async function confirmResetData() {
+            if (!confirm("¿Deseas vaciar la base de datos para iniciar en blanco? Todas las tablas de raw, staging, silver y gold se vaciarán.")) {
+                return;
+            }
+            showToast("Vaciando base de datos y dejando plataforma en blanco...", "info");
+            try {
+                const res = await fetch("/api/reset-data", { method: "POST" });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail);
+                showToast(data.message, "success");
+                loadDashboardData();
+                studentsData = null;
+                errorsData = null;
+            } catch (e) {
+                showToast("Error al reiniciar: " + e.message, "error");
+            }
+        }
+
+        async function generateSynthetic() {
+            showToast("Generando datos sintéticos de demostración...", "info");
+            try {
+                const res = await fetch("/api/generate-synthetic", { method: "POST" });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail);
+                showToast(data.message, "success");
+                loadDashboardData();
+                studentsData = null;
+                errorsData = null;
+            } catch (e) {
+                showToast("Error generando datos: " + e.message, "error");
             }
         }
 
