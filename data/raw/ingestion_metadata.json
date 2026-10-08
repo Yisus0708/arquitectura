@@ -1,63 +1,242 @@
 {
-    "generated_at": "2026-10-07T17:26:28.780085",
+    "generated_at": "2026-10-08T06:18:31.367713",
     "random_seed": "N/A (Uploaded Excel)",
     "source": "Uploaded Excel Workbook (Custom Mapping)",
     "mapping_used": {
         "status": "ready",
         "mapped_sheets": {
+            "estudiantes": {
+                "entity": "students",
+                "confidence": 1.0,
+                "column_mapping": {
+                    "estudiante_id": "student_id",
+                    "genero": "gender",
+                    "fecha_nacimiento": "birth_date",
+                    "curso_id": "course_id",
+                    "documento": "document_number",
+                    "nombres": "first_name",
+                    "apellidos": "last_name"
+                },
+                "ignored_columns": [
+                    "estado"
+                ],
+                "field_confidences": {
+                    "student_id": 1.0,
+                    "gender": 1.0,
+                    "birth_date": 1.0,
+                    "course_id": 1.0,
+                    "document_number": 0.95,
+                    "first_name": 0.95,
+                    "last_name": 0.95
+                },
+                "row_count": 243
+            },
+            "materias": {
+                "entity": "subjects",
+                "confidence": 1.0,
+                "column_mapping": {
+                    "materia_id": "subject_id",
+                    "nombre_materia": "subject_name"
+                },
+                "ignored_columns": [],
+                "field_confidences": {
+                    "subject_id": 1.0,
+                    "subject_name": 1.0
+                },
+                "row_count": 10
+            },
+            "curso_materia": {
+                "entity": "course_subjects",
+                "confidence": 1.0,
+                "column_mapping": {
+                    "curso_id": "course_id",
+                    "materia_id": "subject_id",
+                    "docente_id": "teacher_id",
+                    "intensidad_horaria": "hours_per_week"
+                },
+                "ignored_columns": [
+                    "curso_materia_id"
+                ],
+                "field_confidences": {
+                    "course_id": 1.0,
+                    "subject_id": 1.0,
+                    "teacher_id": 1.0,
+                    "hours_per_week": 0.95
+                },
+                "row_count": 121
+            },
+            "evaluaciones": {
+                "entity": "assessments",
+                "confidence": 1.0,
+                "column_mapping": {
+                    "evaluacion_id": "assessment_id",
+                    "materia_id": "subject_id",
+                    "periodo_id": "period_id",
+                    "tipo": "type",
+                    "porcentaje": "weight",
+                    "fecha_evaluacion": "date"
+                },
+                "ignored_columns": [],
+                "field_confidences": {
+                    "assessment_id": 1.0,
+                    "subject_id": 1.0,
+                    "period_id": 1.0,
+                    "type": 1.0,
+                    "weight": 0.95,
+                    "date": 0.95
+                },
+                "row_count": 152
+            },
             "notas": {
                 "entity": "grades",
                 "confidence": 1.0,
                 "column_mapping": {
+                    "nota_id": "grade_id",
                     "estudiante_id": "student_id",
                     "evaluacion_id": "assessment_id",
-                    "nota": "score"
+                    "nota": "score",
+                    "fecha_registro": "registration_date"
                 },
                 "ignored_columns": [],
                 "field_confidences": {
+                    "grade_id": 1.0,
                     "student_id": 1.0,
                     "assessment_id": 1.0,
-                    "score": 1.0
+                    "score": 1.0,
+                    "registration_date": 1.0
                 },
-                "row_count": 2
+                "row_count": 36495
             },
-            "evaluaciones": {
-                "entity": "assessments",
-                "confidence": 0.95,
+            "asistencia": {
+                "entity": "attendance",
+                "confidence": 0.93,
                 "column_mapping": {
-                    "evaluacion_id": "assessment_id",
-                    "nombre": "name",
-                    "peso": "weight"
+                    "asistencia_id": "attendance_id",
+                    "estudiante_id": "student_id",
+                    "periodo_id": "period_id",
+                    "dias_clase": "total_classes",
+                    "inasistencias": "absences"
+                },
+                "ignored_columns": [
+                    "excusas"
+                ],
+                "field_confidences": {
+                    "attendance_id": 1.0,
+                    "student_id": 1.0,
+                    "period_id": 1.0,
+                    "total_classes": 1.0,
+                    "absences": 1.0
+                },
+                "row_count": 960
+            },
+            "periodos": {
+                "entity": "periods",
+                "confidence": 0.92,
+                "column_mapping": {
+                    "periodo_id": "period_id",
+                    "fecha_inicio": "start_date",
+                    "fecha_fin": "end_date",
+                    "nombre": "period_name",
+                    "peso_pct": "weight"
+                },
+                "ignored_columns": [
+                    "anio"
+                ],
+                "field_confidences": {
+                    "period_id": 1.0,
+                    "start_date": 1.0,
+                    "end_date": 1.0,
+                    "period_name": 0.95,
+                    "weight": 0.7
+                },
+                "row_count": 4
+            },
+            "cursos": {
+                "entity": "courses",
+                "confidence": 0.87,
+                "column_mapping": {
+                    "curso_id": "course_id",
+                    "nombre_curso": "course_name",
+                    "grado": "level"
                 },
                 "ignored_columns": [],
                 "field_confidences": {
-                    "assessment_id": 1.0,
-                    "name": 1.0,
-                    "weight": 1.0
+                    "course_id": 1.0,
+                    "course_name": 1.0,
+                    "level": 0.7
                 },
-                "row_count": 2
+                "row_count": 12
             },
-            "estudiantes": {
-                "entity": "students",
-                "confidence": 0.89,
+            "docentes": {
+                "entity": "teachers",
+                "confidence": 0.71,
                 "column_mapping": {
-                    "estudiante_id": "student_id",
+                    "docente_id": "teacher_id",
                     "nombre": "first_name"
                 },
                 "ignored_columns": [],
                 "field_confidences": {
-                    "student_id": 1.0,
+                    "teacher_id": 1.0,
                     "first_name": 1.0
                 },
-                "row_count": 2
+                "row_count": 14
+            },
+            "escala_desempeno": {
+                "entity": "performance_scale",
+                "confidence": 0.7,
+                "column_mapping": {
+                    "nivel": "level",
+                    "nota_min": "min_score",
+                    "nota_max": "max_score"
+                },
+                "ignored_columns": [],
+                "field_confidences": {
+                    "level": 1.0,
+                    "min_score": 0.7,
+                    "max_score": 0.7
+                },
+                "row_count": 4
             }
         },
-        "ignored_sheets": [],
+        "ignored_sheets": [
+            {
+                "sheet_name": "diccionario",
+                "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+                "row_count": 22
+            },
+            {
+                "sheet_name": "errores_sembrados",
+                "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+                "row_count": 133
+            }
+        ],
         "detected_grading_scale": {
             "scale_type": "0-5",
             "min_grade": 0.0,
             "max_grade": 5.0,
-            "passing_grade": 3.0
+            "passing_grade": 3.0,
+            "scale_table": [
+                {
+                    "nivel": "Bajo",
+                    "nota_min": 0.0,
+                    "nota_max": 2.9
+                },
+                {
+                    "nivel": "Básico",
+                    "nota_min": 3.0,
+                    "nota_max": 3.9
+                },
+                {
+                    "nivel": "Alto",
+                    "nota_min": 4.0,
+                    "nota_max": 4.5
+                },
+                {
+                    "nivel": "Superior",
+                    "nota_min": 4.6,
+                    "nota_max": 5.0
+                }
+            ]
         },
         "detected_weight_rule": {
             "rule": "by_subject_period",
@@ -65,7 +244,7 @@
                 "materia_id",
                 "periodo_id"
             ],
-            "valid_group_ratio": 0.0
+            "valid_group_ratio": 0.95
         },
         "detected_parameters": {
             "grade_scale": "0-5",
@@ -74,108 +253,251 @@
         },
         "sheets": [
             {
-                "sheet_name": "notas",
-                "entity_mapped": "grades",
+                "sheet_name": "estudiantes",
+                "entity_mapped": "students",
                 "confidence": 1.0,
-                "rows_count": 2,
+                "rows_count": 243,
                 "column_mappings": {
                     "estudiante_id": "student_id",
-                    "evaluacion_id": "assessment_id",
-                    "nota": "score"
+                    "genero": "gender",
+                    "fecha_nacimiento": "birth_date",
+                    "curso_id": "course_id",
+                    "documento": "document_number",
+                    "nombres": "first_name",
+                    "apellidos": "last_name"
+                },
+                "ignored_columns": [
+                    "estado"
+                ]
+            },
+            {
+                "sheet_name": "materias",
+                "entity_mapped": "subjects",
+                "confidence": 1.0,
+                "rows_count": 10,
+                "column_mappings": {
+                    "materia_id": "subject_id",
+                    "nombre_materia": "subject_name"
                 },
                 "ignored_columns": []
+            },
+            {
+                "sheet_name": "curso_materia",
+                "entity_mapped": "course_subjects",
+                "confidence": 1.0,
+                "rows_count": 121,
+                "column_mappings": {
+                    "curso_id": "course_id",
+                    "materia_id": "subject_id",
+                    "docente_id": "teacher_id",
+                    "intensidad_horaria": "hours_per_week"
+                },
+                "ignored_columns": [
+                    "curso_materia_id"
+                ]
             },
             {
                 "sheet_name": "evaluaciones",
                 "entity_mapped": "assessments",
-                "confidence": 0.95,
-                "rows_count": 2,
+                "confidence": 1.0,
+                "rows_count": 152,
                 "column_mappings": {
                     "evaluacion_id": "assessment_id",
-                    "nombre": "name",
-                    "peso": "weight"
+                    "materia_id": "subject_id",
+                    "periodo_id": "period_id",
+                    "tipo": "type",
+                    "porcentaje": "weight",
+                    "fecha_evaluacion": "date"
                 },
                 "ignored_columns": []
             },
             {
-                "sheet_name": "estudiantes",
-                "entity_mapped": "students",
-                "confidence": 0.89,
-                "rows_count": 2,
+                "sheet_name": "notas",
+                "entity_mapped": "grades",
+                "confidence": 1.0,
+                "rows_count": 36495,
                 "column_mappings": {
+                    "nota_id": "grade_id",
                     "estudiante_id": "student_id",
+                    "evaluacion_id": "assessment_id",
+                    "nota": "score",
+                    "fecha_registro": "registration_date"
+                },
+                "ignored_columns": []
+            },
+            {
+                "sheet_name": "asistencia",
+                "entity_mapped": "attendance",
+                "confidence": 0.93,
+                "rows_count": 960,
+                "column_mappings": {
+                    "asistencia_id": "attendance_id",
+                    "estudiante_id": "student_id",
+                    "periodo_id": "period_id",
+                    "dias_clase": "total_classes",
+                    "inasistencias": "absences"
+                },
+                "ignored_columns": [
+                    "excusas"
+                ]
+            },
+            {
+                "sheet_name": "periodos",
+                "entity_mapped": "periods",
+                "confidence": 0.92,
+                "rows_count": 4,
+                "column_mappings": {
+                    "periodo_id": "period_id",
+                    "fecha_inicio": "start_date",
+                    "fecha_fin": "end_date",
+                    "nombre": "period_name",
+                    "peso_pct": "weight"
+                },
+                "ignored_columns": [
+                    "anio"
+                ]
+            },
+            {
+                "sheet_name": "cursos",
+                "entity_mapped": "courses",
+                "confidence": 0.87,
+                "rows_count": 12,
+                "column_mappings": {
+                    "curso_id": "course_id",
+                    "nombre_curso": "course_name",
+                    "grado": "level"
+                },
+                "ignored_columns": []
+            },
+            {
+                "sheet_name": "docentes",
+                "entity_mapped": "teachers",
+                "confidence": 0.71,
+                "rows_count": 14,
+                "column_mappings": {
+                    "docente_id": "teacher_id",
                     "nombre": "first_name"
                 },
                 "ignored_columns": []
+            },
+            {
+                "sheet_name": "escala_desempeno",
+                "entity_mapped": "performance_scale",
+                "confidence": 0.7,
+                "rows_count": 4,
+                "column_mappings": {
+                    "nivel": "level",
+                    "nota_min": "min_score",
+                    "nota_max": "max_score"
+                },
+                "ignored_columns": []
+            },
+            {
+                "sheet_name": "diccionario",
+                "entity_mapped": null,
+                "confidence": 0.0,
+                "rows_count": 22,
+                "column_mappings": {},
+                "ignored_columns": []
+            },
+            {
+                "sheet_name": "errores_sembrados",
+                "entity_mapped": null,
+                "confidence": 0.0,
+                "rows_count": 133,
+                "column_mappings": {},
+                "ignored_columns": []
             }
         ],
-        "unmapped_sheets": [],
+        "unmapped_sheets": [
+            {
+                "sheet_name": "diccionario",
+                "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+                "row_count": 22
+            },
+            {
+                "sheet_name": "errores_sembrados",
+                "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+                "row_count": 133
+            }
+        ],
         "can_process": true,
-        "warnings": [
-            "No se detectó hoja de cursos; las evaluaciones y estudiantes no tendrán referencia de grupo.",
-            "No se detectó catálogo de materias."
-        ]
+        "warnings": []
     },
     "files": {
         "courses.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\courses.csv",
-            "row_count": 0,
-            "sha256": "0598ac3c4d31eaa6631025c856149d437ce048510f11180b508ecbeb9818b94f"
+            "row_count": 12,
+            "sha256": "ca759862bfa3ba2b4bfaef56ca4acfd30ea561cffcaf6a457307f243f5c3e9fb"
         },
         "subjects.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\subjects.csv",
-            "row_count": 0,
-            "sha256": "116203408d43d084e145665996b84985c56368a7309ea98564b7da115c3cd35f"
+            "row_count": 10,
+            "sha256": "247f48666ef229f8bddcf2ce9fc0464d4dfefa4b6451edf75eb7ad09a73cb133"
         },
         "students.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\students.csv",
-            "row_count": 2,
-            "sha256": "7010225257e742484e062565c69b1309ecfef897a436888428f969168af71ebc"
+            "row_count": 243,
+            "sha256": "fda00c0141e566d4132d0e09a7750def20646d337ece61bb74e0256b9fdab565"
         },
         "assessments.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\assessments.csv",
-            "row_count": 2,
-            "sha256": "74f3999f0de68e8d4963d95f8c7aa6b7311372366d8435f21203eb8ca97c47ab"
+            "row_count": 152,
+            "sha256": "6dd58175ca6f9baf8ff5e23cd6e59bd272fcdf59d078c2c10313119501996691"
         },
         "grades.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\grades.csv",
-            "row_count": 2,
-            "sha256": "3457714f2c2154cb70565ea40175363a8799325d99cc73daf78dd97877b427a3"
+            "row_count": 36495,
+            "sha256": "cc03fb399d8b95ec81c7b736a421ee0c143d4bb5c93d969d3dc4291f0c307dec"
         },
         "periods.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\periods.csv",
-            "row_count": 0,
-            "sha256": "affef49300a84b307d1635aead04633e9000c56097aef738d906a414edf4705e"
+            "row_count": 4,
+            "sha256": "0f82aec9a9b55efb3353fbdc3d9b302eb47a0eae5786710e6529b483022ee53b"
         },
         "teachers.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\teachers.csv",
-            "row_count": 0,
-            "sha256": "1d6c61af9f3def45723b4e581d8c802bdac985b165e96b8e1a1e9ec304cb4e2b"
+            "row_count": 14,
+            "sha256": "3e2cb3c9a96f84278e3365d52b93b39f7d0a29db98c8ced5517c2018b88450e3"
         },
         "course_subjects.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\course_subjects.csv",
-            "row_count": 0,
-            "sha256": "6a910ab99ca6dbb594485ea5063eb87ed47dae75f90d27f96dade610a3f23e5a"
+            "row_count": 121,
+            "sha256": "bd1643c1d3c54a8e971811eef86b6642943d0ce9d5cb74498d24a5d779872660"
         },
         "attendance.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\attendance.csv",
-            "row_count": 0,
-            "sha256": "393e9647c06d9566a983a945a46139bdf3a71c550f23199f8ab0d8597015cefd"
+            "row_count": 960,
+            "sha256": "9de5d61d1028e860f6ee64057d73f78d8d9dcdc4833a8020427c520c2911cb05"
         },
         "performance_scale.csv": {
             "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\performance_scale.csv",
-            "row_count": 0,
-            "sha256": "170b17cefe9d70b608e1ee7431a718ae35dbfa38328a2ef54c964e699d483fc5"
+            "row_count": 4,
+            "sha256": "7e852952f6786af43b04605bdeaeeba6579ed41e33cc1eb75614569a5155e37c"
         }
     },
     "raw_counts": {
-        "students": 2,
-        "assessments": 2,
-        "grades": 2
+        "courses": 12,
+        "subjects": 10,
+        "students": 243,
+        "assessments": 152,
+        "grades": 36495,
+        "periods": 4,
+        "teachers": 14,
+        "course_subjects": 121,
+        "attendance": 960,
+        "performance_scale": 4
     },
     "processed_entities": {
-        "students": 2,
-        "assessments": 2,
-        "grades": 2
+        "courses": 12,
+        "subjects": 10,
+        "students": 243,
+        "assessments": 152,
+        "grades": 36495,
+        "periods": 4,
+        "teachers": 14,
+        "course_subjects": 121,
+        "attendance": 960,
+        "performance_scale": 4
     }
 }

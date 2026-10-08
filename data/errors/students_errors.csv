@@ -1,1 +1,10 @@
-error_reason
+student_id,document_number,first_name,last_name,gender,birth_date,email,course_id,enrollment_date,status,extra,error_reason
+80,1194439850,Sofía,Cantillo Rodríguez,M,2031-05-05,,4,,,"{""estado"": ""Activo""}",Impossible birth_date: '2031-05-05' (out of biological bounds)
+124,1035080895,Mateo,Rojas Torres,F,1900-01-01,,7,,,"{""estado"": ""Activo""}",Impossible birth_date: '1900-01-01' (out of biological bounds)
+126,1095170968,Felipe,Pacheco Vargas,F,2010-03-15,,77,,,"{""estado"": ""Activo""}",curso_id inexistente (77)
+212,1167381242,Nicolás,Castro Gómez,M,2008-10-31,,88,,,"{""estado"": ""Activo""}",curso_id inexistente (88)
+11,1141574108,David,Pacheco Pacheco,M,2014-04-03,,1,,,"{""estado"": ""Activo""}",estudiante_id duplicado: 11
+60,1012067082,Antonia,López Díaz,M,2013-06-11,,3,,,"{""estado"": ""Activo""}",estudiante_id duplicado: 60
+199,1021836435,Salomé,Rodríguez Cantillo,F,2009-02-27,,10,,,"{""estado"": ""Activo""}",estudiante_id duplicado: 199
+101,1007146672,Sebastián,Polo Díaz,F,2011-05-09,,6,,,"{""estado"": ""Activo""}",documento duplicado: 1007146672
+151,1123559137,Nicolás,Hernández Jiménez,F,2011-06-28,,8,,,"{""estado"": ""Activo""}",documento duplicado: 1123559137

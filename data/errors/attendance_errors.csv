@@ -1,1 +1,6 @@
-error_reason
+attendance_id,student_id,course_id,period_id,total_classes,absences,extra,error_reason
+312,78,,4,50,-2,"{""excusas"": ""0""}",inasistencias negativas
+322,81,,2,47,-2,"{""excusas"": ""0""}",inasistencias negativas
+353,89,,1,45,50,"{""excusas"": ""0""}",inasistencias > días de clase
+536,134,,4,49,54,"{""excusas"": ""1""}",inasistencias > días de clase
+885,222,,1,49,54,"{""excusas"": ""0""}",inasistencias > días de clase

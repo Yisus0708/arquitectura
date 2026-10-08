@@ -1,1 +1,5 @@
 level,min_score,max_score,description,extra
+Bajo,0,2.9,,
+Básico,3,3.9,,
+Alto,4,4.5,,
+Superior,4.6,5,,
