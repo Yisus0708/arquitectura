@@ -1,74 +1,181 @@
 {
-    "generated_at": "2026-10-07T08:53:37.634212",
-    "random_seed": 42,
-    "scale": "0.0 - 5.0 (passing >= 3.0)",
+    "generated_at": "2026-10-07T17:26:28.780085",
+    "random_seed": "N/A (Uploaded Excel)",
+    "source": "Uploaded Excel Workbook (Custom Mapping)",
+    "mapping_used": {
+        "status": "ready",
+        "mapped_sheets": {
+            "notas": {
+                "entity": "grades",
+                "confidence": 1.0,
+                "column_mapping": {
+                    "estudiante_id": "student_id",
+                    "evaluacion_id": "assessment_id",
+                    "nota": "score"
+                },
+                "ignored_columns": [],
+                "field_confidences": {
+                    "student_id": 1.0,
+                    "assessment_id": 1.0,
+                    "score": 1.0
+                },
+                "row_count": 2
+            },
+            "evaluaciones": {
+                "entity": "assessments",
+                "confidence": 0.95,
+                "column_mapping": {
+                    "evaluacion_id": "assessment_id",
+                    "nombre": "name",
+                    "peso": "weight"
+                },
+                "ignored_columns": [],
+                "field_confidences": {
+                    "assessment_id": 1.0,
+                    "name": 1.0,
+                    "weight": 1.0
+                },
+                "row_count": 2
+            },
+            "estudiantes": {
+                "entity": "students",
+                "confidence": 0.89,
+                "column_mapping": {
+                    "estudiante_id": "student_id",
+                    "nombre": "first_name"
+                },
+                "ignored_columns": [],
+                "field_confidences": {
+                    "student_id": 1.0,
+                    "first_name": 1.0
+                },
+                "row_count": 2
+            }
+        },
+        "ignored_sheets": [],
+        "detected_grading_scale": {
+            "scale_type": "0-5",
+            "min_grade": 0.0,
+            "max_grade": 5.0,
+            "passing_grade": 3.0
+        },
+        "detected_weight_rule": {
+            "rule": "by_subject_period",
+            "group_cols": [
+                "materia_id",
+                "periodo_id"
+            ],
+            "valid_group_ratio": 0.0
+        },
+        "detected_parameters": {
+            "grade_scale": "0-5",
+            "min_passing_grade": 3.0,
+            "weight_grouping_rule": "(materia, periodo)"
+        },
+        "sheets": [
+            {
+                "sheet_name": "notas",
+                "entity_mapped": "grades",
+                "confidence": 1.0,
+                "rows_count": 2,
+                "column_mappings": {
+                    "estudiante_id": "student_id",
+                    "evaluacion_id": "assessment_id",
+                    "nota": "score"
+                },
+                "ignored_columns": []
+            },
+            {
+                "sheet_name": "evaluaciones",
+                "entity_mapped": "assessments",
+                "confidence": 0.95,
+                "rows_count": 2,
+                "column_mappings": {
+                    "evaluacion_id": "assessment_id",
+                    "nombre": "name",
+                    "peso": "weight"
+                },
+                "ignored_columns": []
+            },
+            {
+                "sheet_name": "estudiantes",
+                "entity_mapped": "students",
+                "confidence": 0.89,
+                "rows_count": 2,
+                "column_mappings": {
+                    "estudiante_id": "student_id",
+                    "nombre": "first_name"
+                },
+                "ignored_columns": []
+            }
+        ],
+        "unmapped_sheets": [],
+        "can_process": true,
+        "warnings": [
+            "No se detectó hoja de cursos; las evaluaciones y estudiantes no tendrán referencia de grupo.",
+            "No se detectó catálogo de materias."
+        ]
+    },
     "files": {
         "courses.csv": {
-            "path": "data\\raw\\courses.csv",
-            "row_count": 4,
-            "columns": [
-                "course_id",
-                "course_name",
-                "grade_level",
-                "academic_year"
-            ],
-            "size_bytes": 161,
-            "sha256": "98c5420adde9b771315038818167560862ed22be9fb8c7c6700056d919f20ba9"
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\courses.csv",
+            "row_count": 0,
+            "sha256": "0598ac3c4d31eaa6631025c856149d437ce048510f11180b508ecbeb9818b94f"
         },
         "subjects.csv": {
-            "path": "data\\raw\\subjects.csv",
-            "row_count": 20,
-            "columns": [
-                "subject_id",
-                "subject_name",
-                "course_id",
-                "department"
-            ],
-            "size_bytes": 1106,
-            "sha256": "7ed3c32725c5c0dccca416dbcc1b9e6c351756b47984523ecb5a6bf3ebfd07cd"
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\subjects.csv",
+            "row_count": 0,
+            "sha256": "116203408d43d084e145665996b84985c56368a7309ea98564b7da115c3cd35f"
         },
         "students.csv": {
-            "path": "data\\raw\\students.csv",
-            "row_count": 83,
-            "columns": [
-                "student_id",
-                "first_name",
-                "last_name",
-                "email",
-                "course_id",
-                "enrollment_date",
-                "status"
-            ],
-            "size_bytes": 6946,
-            "sha256": "2b37415d75e748477c2c70fccfb14ba4fc65584847668557bc91b3342fefd5c3"
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\students.csv",
+            "row_count": 2,
+            "sha256": "7010225257e742484e062565c69b1309ecfef897a436888428f969168af71ebc"
         },
         "assessments.csv": {
-            "path": "data\\raw\\assessments.csv",
-            "row_count": 83,
-            "columns": [
-                "assessment_id",
-                "subject_id",
-                "assessment_name",
-                "assessment_type",
-                "weight_percentage",
-                "assessment_date"
-            ],
-            "size_bytes": 6450,
-            "sha256": "bdfd2f36ccc2dad6aeadc866c82520b29b0b8c6dfbabcb81af7c3f0462622791"
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\assessments.csv",
+            "row_count": 2,
+            "sha256": "74f3999f0de68e8d4963d95f8c7aa6b7311372366d8435f21203eb8ca97c47ab"
         },
         "grades.csv": {
-            "path": "data\\raw\\grades.csv",
-            "row_count": 1607,
-            "columns": [
-                "grade_id",
-                "assessment_id",
-                "student_id",
-                "score",
-                "submission_date",
-                "feedback"
-            ],
-            "size_bytes": 159675,
-            "sha256": "53ec17862c46740c4b2a017e64985447af89d39ea40da86436a95871d0c40d95"
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\grades.csv",
+            "row_count": 2,
+            "sha256": "3457714f2c2154cb70565ea40175363a8799325d99cc73daf78dd97877b427a3"
+        },
+        "periods.csv": {
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\periods.csv",
+            "row_count": 0,
+            "sha256": "affef49300a84b307d1635aead04633e9000c56097aef738d906a414edf4705e"
+        },
+        "teachers.csv": {
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\teachers.csv",
+            "row_count": 0,
+            "sha256": "1d6c61af9f3def45723b4e581d8c802bdac985b165e96b8e1a1e9ec304cb4e2b"
+        },
+        "course_subjects.csv": {
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\course_subjects.csv",
+            "row_count": 0,
+            "sha256": "6a910ab99ca6dbb594485ea5063eb87ed47dae75f90d27f96dade610a3f23e5a"
+        },
+        "attendance.csv": {
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\attendance.csv",
+            "row_count": 0,
+            "sha256": "393e9647c06d9566a983a945a46139bdf3a71c550f23199f8ab0d8597015cefd"
+        },
+        "performance_scale.csv": {
+            "path": "C:\\Users\\SOPORTE\\OneDrive\\Desktop\\arquitectura\\data\\raw\\performance_scale.csv",
+            "row_count": 0,
+            "sha256": "170b17cefe9d70b608e1ee7431a718ae35dbfa38328a2ef54c964e699d483fc5"
         }
+    },
+    "raw_counts": {
+        "students": 2,
+        "assessments": 2,
+        "grades": 2
+    },
+    "processed_entities": {
+        "students": 2,
+        "assessments": 2,
+        "grades": 2
     }
 }

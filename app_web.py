@@ -12,14 +12,15 @@ Run:
     python app_web.py
 """
 import io
+import json
 import sys
 import webbrowser
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 import pandas as pd
 import uvicorn
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,7 +31,14 @@ if str(BASE_DIR) not in sys.path:
 
 from src.utils.db import fetch_query, ensure_database_exists, ensure_schemas_exist
 from src.utils.config import ERRORS_DATA_DIR, RAW_DATA_DIR
-from src.ingestion.excel_handler import create_excel_template, process_uploaded_excel_file
+from src.ingestion.excel_handler import (
+    create_excel_template,
+    process_uploaded_excel_file,
+    preview_excel_mapping,
+    process_confirmed_excel,
+    save_mapping_template,
+)
+from src.reporting.reconciliation import generate_reconciliation_report
 from src.ingestion.generate_data import main as run_data_generation
 from scripts.run_pipeline import execute_pipeline
 
@@ -95,7 +103,8 @@ def get_students():
             ORDER BY academic_ranking_overall ASC;
         """)
         grades = fetch_query("""
-            SELECT student_id, subject_name, department, final_grade, is_approved, approval_status
+            SELECT student_id, subject_name, department, final_grade, is_approved,
+                   CASE WHEN is_approved THEN 'APROBADO' ELSE 'REPROBADO' END AS approval_status
             FROM gold.final_grade_by_student_subject
             ORDER BY subject_name ASC;
         """)
@@ -132,22 +141,87 @@ def download_excel_template():
     )
 
 
-@app.post("/api/upload-excel", response_class=JSONResponse)
-async def upload_excel(file: UploadFile = File(...)):
-    """Receives uploaded Excel, parses sheets, and runs data pipeline."""
+@app.post("/api/preview-mapping", response_class=JSONResponse)
+async def preview_mapping_endpoint(file: UploadFile = File(...)):
+    """Genera perfilado y propuesta semántica de mapeo para previsualización."""
     if not (file.filename.endswith(".xlsx") or file.filename.endswith(".xls")):
         raise HTTPException(status_code=400, detail="El archivo debe ser en formato Excel (.xlsx o .xls)")
-
     try:
         content = await file.read()
-        summary = process_uploaded_excel_file(content)
+        preview = preview_excel_mapping(content)
         return {
             "status": "success",
-            "message": f"Archivo '{file.filename}' procesado y pipeline ejecutado exitosamente.",
-            "details": summary
+            "filename": file.filename,
+            "preview": preview
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error procesando archivo Excel: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al analizar estructura del Excel: {str(e)}")
+
+
+@app.post("/api/confirm-and-process", response_class=JSONResponse)
+async def confirm_and_process_endpoint(
+    file: UploadFile = File(...),
+    mapping_json: Optional[str] = Form(None),
+    rejection_threshold_pct: float = Form(20.0)
+):
+    """
+    Procesa el archivo Excel con el mapeo confirmado por el usuario, ejecuta el pipeline
+    y devuelve el reporte de reconciliación por entidad.
+    """
+    try:
+        content = await file.read()
+        if mapping_json:
+            mapping = json.loads(mapping_json)
+        else:
+            mapping = preview_excel_mapping(content)
+
+        # 1. Ingesta a raw preservando columnas extra y sin inventar datos
+        metadata = process_confirmed_excel(content, mapping)
+
+        # 2. Guardar plantilla si se desea
+        try:
+            save_mapping_template(mapping, f"template_{file.filename}.json")
+        except Exception:
+            pass
+
+        # 3. Ejecutar pipeline
+        success = execute_pipeline(generate_data=False)
+        if not success:
+            raise RuntimeError("La ejecución del pipeline Medallón reportó fallos.")
+
+        # 4. Generar reporte de reconciliación
+        recon_report = generate_reconciliation_report(rejection_threshold_pct=rejection_threshold_pct)
+
+        # Si la carga quedó vacía, responder con error
+        if recon_report["overall"]["is_empty_load"]:
+            raise HTTPException(status_code=400, detail="La carga finalizó pero no generó registros válidos en Gold.")
+
+        return {
+            "status": recon_report["status"],
+            "message": recon_report["message"],
+            "reconciliation": recon_report,
+            "metadata": metadata
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en procesamiento confirmado: {str(e)}")
+
+
+@app.get("/api/reconciliation-report", response_class=JSONResponse)
+def get_reconciliation_report_endpoint(rejection_threshold_pct: float = 20.0):
+    """Devuelve el reporte de reconciliación actual."""
+    try:
+        report = generate_reconciliation_report(rejection_threshold_pct=rejection_threshold_pct)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/upload-excel", response_class=JSONResponse)
+async def upload_excel(file: UploadFile = File(...)):
+    """Procesamiento directo retrocompatible."""
+    return await confirm_and_process_endpoint(file=file)
 
 
 @app.post("/api/run-pipeline", response_class=JSONResponse)
@@ -180,20 +254,23 @@ def reset_data_api():
     try:
         from src.utils.db import execute_query
         truncate_sql = """
-            TRUNCATE TABLE raw.grades, raw.assessments, raw.students, raw.subjects, raw.courses CASCADE;
-            TRUNCATE TABLE staging.grades, staging.assessments, staging.students, staging.subjects, staging.courses CASCADE;
-            TRUNCATE TABLE silver.grades, silver.assessments, silver.students, silver.subjects, silver.courses CASCADE;
-            TRUNCATE TABLE gold.fact_grades, gold.dim_student, gold.dim_subject, gold.dim_course, gold.dim_date CASCADE;
-            TRUNCATE TABLE gold.final_grade_by_student_subject, gold.subject_performance, gold.student_performance,
-                           gold.course_performance, gold.assessment_type_performance, gold.top_bottom_students,
-                           gold.subjects_highest_failure CASCADE;
+            TRUNCATE TABLE raw.grades, raw.assessments, raw.students, raw.subjects, raw.courses,
+                           raw.periods, raw.attendance CASCADE;
+            TRUNCATE TABLE staging.grades, staging.assessments, staging.students, staging.subjects, staging.courses,
+                           staging.periods, staging.attendance CASCADE;
+            TRUNCATE TABLE silver.grades, silver.assessments, silver.students, silver.subjects, silver.courses,
+                           silver.periods, silver.attendance CASCADE;
+            TRUNCATE TABLE gold.fact_grades, gold.dim_student, gold.dim_subject, gold.dim_course, gold.dim_period, gold.dim_date CASCADE;
         """
         execute_query(truncate_sql)
 
-        # Clear error files
+        # Clear error files and corrections log
         for f in ERRORS_DATA_DIR.glob("*_errors.csv"):
             if f.is_file():
                 pd.DataFrame(columns=["error_reason"]).to_csv(f, index=False)
+        corr_file = ERRORS_DATA_DIR / "corrections_log.csv"
+        if corr_file.is_file():
+            pd.DataFrame(columns=["entity", "row_id", "field", "original_value", "normalized_value", "action"]).to_csv(corr_file, index=False)
 
         return {"status": "success", "message": "Base de datos y archivos reiniciados con éxito. La plataforma está totalmente en blanco."}
     except Exception as e:
@@ -272,6 +349,9 @@ def get_dashboard_html():
                 </button>
                 <button onclick="switchTab('subir-excel')" id="tab-subir-excel" class="py-4 px-1 text-slate-600 hover:text-blue-600 font-medium flex items-center">
                     <i class="fa-solid fa-cloud-arrow-up mr-2 text-blue-600"></i> Subir Archivo Excel
+                </button>
+                <button onclick="switchTab('reconciliacion')" id="tab-reconciliacion" class="py-4 px-1 text-slate-600 hover:text-blue-600 font-medium flex items-center">
+                    <i class="fa-solid fa-scale-balanced mr-2 text-indigo-600"></i> Reconciliación
                 </button>
                 <button onclick="switchTab('calidad')" id="tab-calidad" class="py-4 px-1 text-slate-600 hover:text-blue-600 font-medium flex items-center">
                     <i class="fa-solid fa-shield-halved mr-2 text-rose-500"></i> Errores de Calidad
@@ -563,10 +643,14 @@ def get_dashboard_html():
                         <input type="file" id="excelFileInput" accept=".xlsx,.xls" class="hidden" onchange="onFileSelected(this)">
                     </div>
 
-                    <div class="mt-6 flex justify-end">
+                    <div class="mt-6 flex flex-wrap justify-end gap-3">
+                        <button type="button" id="btnPreview" onclick="previewMapping()" disabled
+                                class="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 bg-white hover:bg-blue-50 text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition">
+                            <i class="fa-solid fa-eye mr-2"></i> 1. Previsualizar Mapeo
+                        </button>
                         <button type="submit" id="btnUploadSubmit" disabled
                                 class="inline-flex items-center px-5 py-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
-                            <i class="fa-solid fa-upload mr-2"></i> Procesar y Ejecutar Pipeline
+                            <i class="fa-solid fa-upload mr-2"></i> 2. Confirmar y Procesar Pipeline
                         </button>
                     </div>
                 </form>
@@ -574,11 +658,90 @@ def get_dashboard_html():
                 <!-- Processing Spinner -->
                 <div id="uploadLoading" class="hidden mt-6 text-center py-4">
                     <i class="fa-solid fa-spinner fa-spin text-2xl text-blue-600"></i>
-                    <p class="text-xs font-medium text-slate-600 mt-2">Validando datos y transformando en PostgreSQL...</p>
+                    <p class="text-xs font-medium text-slate-600 mt-2">Analizando archivo y procesando pipeline en PostgreSQL...</p>
+                </div>
+
+                <!-- Mapping Preview Container -->
+                <div id="mappingPreviewArea" class="hidden mt-6 p-4 rounded-xl border border-blue-200 bg-blue-50/50 text-xs space-y-4">
+                    <div class="flex items-center justify-between border-b border-blue-200 pb-3">
+                        <h4 class="font-bold text-slate-900 text-sm flex items-center">
+                            <i class="fa-solid fa-diagram-project text-blue-600 mr-2"></i> Propuesta de Mapeo Semántico Detectado
+                        </h4>
+                        <span id="mappingReadyBadge" class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">Listo para Confirmar</span>
+                    </div>
+                    <div id="mappingDetailsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <div id="mappingTablesContainer" class="overflow-x-auto bg-white rounded-lg border border-slate-200 p-3"></div>
                 </div>
 
                 <!-- Result Card -->
                 <div id="uploadResultCard" class="hidden mt-6 p-4 rounded-lg border text-xs"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- TAB 5: RECONCILIACIÓN Y AUDITORÍA (REPORTE COMPLETO) -->
+        <!-- ============================================================== -->
+        <section id="section-reconciliacion" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center">
+                            <i class="fa-solid fa-scale-balanced text-indigo-600 mr-2"></i> Reporte de Reconciliación por Entidad
+                        </h2>
+                        <p class="text-xs text-slate-500">Trazabilidad exhaustiva: Filas Excel &rarr; Válidas &rarr; Rechazadas en Cuarentena &rarr; Normalizadas &rarr; Cargadas en Gold.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="loadReconciliationData()" class="px-3 py-1.5 border border-slate-300 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-50 transition">
+                            <i class="fa-solid fa-rotate-right mr-1.5"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status / Alert Banner -->
+                <div id="reconciliationAlertBanner" class="mb-6 p-4 rounded-xl border text-xs flex items-center space-x-3"></div>
+
+                <!-- Overall Metrics Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block">Total Filas Excel</span>
+                        <span class="text-lg font-bold text-slate-900" id="recon-total-excel">--</span>
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-center">
+                        <span class="text-xs text-emerald-700 block">Filas Válidas</span>
+                        <span class="text-lg font-bold text-emerald-800" id="recon-total-valid">--</span>
+                    </div>
+                    <div class="bg-rose-50 p-3 rounded-lg border border-rose-200 text-center">
+                        <span class="text-xs text-rose-700 block">Cuarentena (Rechazadas)</span>
+                        <span class="text-lg font-bold text-rose-800" id="recon-total-quarantine">--</span>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 text-center">
+                        <span class="text-xs text-blue-700 block">Normalizadas (Comas/Género)</span>
+                        <span class="text-lg font-bold text-blue-800" id="recon-total-norm">--</span>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-lg border border-purple-200 text-center">
+                        <span class="text-xs text-purple-700 block">% Tasa de Rechazo</span>
+                        <span class="text-lg font-bold text-purple-800" id="recon-rejection-rate">--</span>
+                    </div>
+                </div>
+
+                <!-- Reconciliation Details Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600" id="reconciliationTable">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-semibold">
+                            <tr>
+                                <th class="py-3 px-3">Entidad</th>
+                                <th class="py-3 px-3 text-center">Filas Excel</th>
+                                <th class="py-3 px-3 text-center text-emerald-700">Válidas</th>
+                                <th class="py-3 px-3 text-center text-rose-700">Cuarentena</th>
+                                <th class="py-3 px-3 text-center text-blue-700">Normalizadas</th>
+                                <th class="py-3 px-3 text-center text-purple-700">Cargadas en Gold</th>
+                                <th class="py-3 px-3 text-center">% Rechazo</th>
+                                <th class="py-3 px-3">Motivos Principales de Error</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reconciliationTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -775,35 +938,232 @@ def get_dashboard_html():
             });
         }
 
+        let currentMapping = null;
+
         async function switchTab(tabName) {
             document.querySelectorAll("#navTabs button").forEach(b => b.classList.remove("active-tab"));
-            document.getElementById("tab-" + tabName).classList.add("active-tab");
+            const tabBtn = document.getElementById("tab-" + tabName);
+            if (tabBtn) tabBtn.classList.add("active-tab");
 
-            const sections = ["resumen", "materias", "estudiantes", "subir-excel", "calidad"];
+            const sections = ["resumen", "materias", "estudiantes", "subir-excel", "reconciliacion", "calidad"];
             sections.forEach(s => {
-                document.getElementById("section-" + s).classList.add("hidden");
+                const el = document.getElementById("section-" + s);
+                if (el) el.classList.add("hidden");
             });
-            document.getElementById("section-" + tabName).classList.remove("hidden");
+            const targetSection = document.getElementById("section-" + tabName);
+            if (targetSection) targetSection.classList.remove("hidden");
 
             if (tabName === "estudiantes" && !studentsData) {
                 loadStudentsData();
             } else if (tabName === "calidad" && !errorsData) {
                 loadErrorsData();
+            } else if (tabName === "reconciliacion") {
+                loadReconciliationData();
             }
+        }
+
+        async function loadReconciliationData() {
+            try {
+                const res = await fetch("/api/reconciliation-report");
+                if (!res.ok) throw new Error("Error cargando reporte de reconciliación");
+                const report = await res.json();
+                renderReconciliationTab(report);
+            } catch (err) {
+                showToast("Error al cargar reconciliación: " + err.message, "error");
+            }
+        }
+
+        function renderReconciliationTab(report) {
+            const overall = report.overall;
+            document.getElementById("recon-total-excel").innerText = (overall.total_excel_rows || 0).toLocaleString();
+            document.getElementById("recon-total-valid").innerText = (overall.total_valid_rows || 0).toLocaleString();
+            document.getElementById("recon-total-quarantine").innerText = (overall.total_quarantined_rows || 0).toLocaleString();
+            document.getElementById("recon-total-norm").innerText = (overall.total_normalized_rows || 0).toLocaleString();
+            document.getElementById("recon-rejection-rate").innerText = (overall.overall_rejection_rate_pct || 0).toFixed(1) + "%";
+
+            const banner = document.getElementById("reconciliationAlertBanner");
+            if (report.status === "warning") {
+                banner.className = "mb-6 p-4 rounded-xl border bg-amber-50 border-amber-300 text-amber-900 flex items-center space-x-3";
+                banner.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-600 text-xl"></i><div><p class="font-bold">Advertencia de Reconciliación</p><p class="text-xs">${report.message}</p></div>`;
+            } else {
+                banner.className = "mb-6 p-4 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 flex items-center space-x-3";
+                banner.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-xl"></i><div><p class="font-bold">Carga Reconciliada Exitosamente</p><p class="text-xs">${report.message}</p></div>`;
+            }
+
+            const tbody = document.getElementById("reconciliationTableBody");
+            tbody.innerHTML = "";
+            const entities = Object.keys(report.entities || {});
+            entities.forEach(ent => {
+                const e = report.entities[ent];
+                const tr = document.createElement("tr");
+
+                let reasonsHtml = "";
+                if (e.quarantine_reasons && Object.keys(e.quarantine_reasons).length > 0) {
+                    reasonsHtml = Object.entries(e.quarantine_reasons).map(([r, count]) =>
+                        `<span class="inline-block bg-rose-50 border border-rose-200 text-rose-800 text-[10px] px-1.5 py-0.5 rounded mr-1 mb-1">${r}: <b>${count}</b></span>`
+                    ).join("");
+                } else {
+                    reasonsHtml = `<span class="text-emerald-600 text-[11px]"><i class="fa-solid fa-check mr-1"></i>Sin errores</span>`;
+                }
+
+                const rejRate = e.rejection_rate_pct || 0;
+                const rejBadge = rejRate > 0 ? (rejRate > 20 ? 'text-rose-700 font-bold' : 'text-amber-700 font-semibold') : 'text-emerald-700 font-medium';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-bold text-slate-800 uppercase text-xs">${ent}</td>
+                    <td class="py-3 px-3 text-center font-medium">${e.excel_rows}</td>
+                    <td class="py-3 px-3 text-center text-emerald-700 font-bold">${e.valid_rows}</td>
+                    <td class="py-3 px-3 text-center text-rose-700 font-bold">${e.quarantined_rows}</td>
+                    <td class="py-3 px-3 text-center text-blue-700 font-medium">${e.normalized_rows}</td>
+                    <td class="py-3 px-3 text-center text-purple-700 font-bold">${e.gold_rows}</td>
+                    <td class="py-3 px-3 text-center ${rejBadge}">${rejRate.toFixed(1)}%</td>
+                    <td class="py-3 px-3">${reasonsHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function previewMapping() {
+            const input = document.getElementById("excelFileInput");
+            if (!input.files || !input.files[0]) {
+                showToast("Por favor selecciona un archivo Excel primero.", "error");
+                return;
+            }
+            const formData = new FormData();
+            formData.append("file", input.files[0]);
+
+            const btnPreview = document.getElementById("btnPreview");
+            const loader = document.getElementById("uploadLoading");
+            const previewArea = document.getElementById("mappingPreviewArea");
+            const resCard = document.getElementById("uploadResultCard");
+
+            btnPreview.disabled = true;
+            loader.classList.remove("hidden");
+            previewArea.classList.add("hidden");
+            resCard.classList.add("hidden");
+
+            try {
+                const res = await fetch("/api/preview-mapping", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+                loader.classList.add("hidden");
+                btnPreview.disabled = false;
+
+                if (!res.ok) throw new Error(data.detail || "Error al analizar el Excel");
+
+                currentMapping = data.preview;
+                renderMappingPreview(currentMapping);
+                showToast("¡Mapeo estructural analizado exitosamente!", "success");
+            } catch (err) {
+                loader.classList.add("hidden");
+                btnPreview.disabled = false;
+                showToast("Error previsualizando mapeo: " + err.message, "error");
+            }
+        }
+
+        function renderMappingPreview(preview) {
+            const previewArea = document.getElementById("mappingPreviewArea");
+            const detailsGrid = document.getElementById("mappingDetailsGrid");
+            const tablesContainer = document.getElementById("mappingTablesContainer");
+
+            detailsGrid.innerHTML = `
+                <div class="bg-white p-3 rounded-lg border border-blue-200 space-y-1">
+                    <span class="text-slate-500 font-semibold block text-[11px] uppercase tracking-wider">Parámetros Dinámicos Detectados</span>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600">Escala de Calificación:</span>
+                        <span class="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">${preview.detected_parameters.grade_scale} (Aprobatoria: ${preview.detected_parameters.min_passing_grade})</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600">Regla de Ponderación:</span>
+                        <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">${preview.detected_parameters.weight_grouping_rule}</span>
+                    </div>
+                </div>
+                <div class="bg-white p-3 rounded-lg border border-blue-200 space-y-1">
+                    <span class="text-slate-500 font-semibold block text-[11px] uppercase tracking-wider">Resumen de Hojas</span>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600">Total Hojas en Archivo:</span>
+                        <span class="font-bold text-slate-800">${preview.sheets.length}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600">Hojas Mapeadas a Entidades:</span>
+                        <span class="font-bold text-emerald-700">${preview.sheets.filter(s => s.entity_mapped).length}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600">Hojas Sin Uso / Ignoradas:</span>
+                        <span class="font-bold text-slate-500">${preview.unmapped_sheets.length}</span>
+                    </div>
+                </div>
+            `;
+
+            let tableHtml = `
+                <table class="w-full text-left text-xs text-slate-600">
+                    <thead class="bg-slate-50 text-slate-700 uppercase font-semibold">
+                        <tr>
+                            <th class="py-2.5 px-3">Hoja Excel</th>
+                            <th class="py-2.5 px-3">Entidad Modelo</th>
+                            <th class="py-2.5 px-3 text-center">Confianza</th>
+                            <th class="py-2.5 px-3 text-center">Filas</th>
+                            <th class="py-2.5 px-3">Campos Mapeados (Columna &rarr; Campo)</th>
+                            <th class="py-2.5 px-3 text-slate-500">Columnas Extra (JSONB)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+            `;
+
+            preview.sheets.forEach(s => {
+                const isMapped = !!s.entity_mapped;
+                const confColor = s.confidence >= 0.8 ? 'bg-emerald-100 text-emerald-800' :
+                                  s.confidence >= 0.5 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600';
+                
+                const colMappings = Object.entries(s.column_mappings || {}).map(([col, fld]) => 
+                    `<span class="inline-block bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[10px] mr-1 mb-1 font-mono">${col} &rarr; <b>${fld}</b></span>`
+                ).join("") || '<span class="text-slate-400 italic">Sin columnas mapeadas</span>';
+
+                const ignoredCols = (s.ignored_columns || []).map(col =>
+                    `<span class="inline-block bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded text-[10px] mr-1 mb-1 font-mono">${col}</span>`
+                ).join("") || '<span class="text-slate-400 italic">Ninguna</span>';
+
+                tableHtml += `
+                    <tr>
+                        <td class="py-2 px-3 font-bold text-slate-800">${s.sheet_name}</td>
+                        <td class="py-2 px-3">
+                            ${isMapped ? `<span class="font-semibold text-blue-700 uppercase text-[11px]">${s.entity_mapped}</span>` : '<span class="text-slate-400 italic">Ignorada</span>'}
+                        </td>
+                        <td class="py-2 px-3 text-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${confColor}">${Math.round((s.confidence || 0) * 100)}%</span>
+                        </td>
+                        <td class="py-2 px-3 text-center font-semibold text-slate-700">${s.rows_count}</td>
+                        <td class="py-2 px-3">${colMappings}</td>
+                        <td class="py-2 px-3">${ignoredCols}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `</tbody></table>`;
+            tablesContainer.innerHTML = tableHtml;
+            previewArea.classList.remove("hidden");
         }
 
         async function loadStudentsData() {
             try {
                 const res = await fetch("/api/students");
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || "Error en el servidor");
+                }
                 studentsData = await res.json();
                 const select = document.getElementById("studentSelect");
                 select.innerHTML = '<option value="">-- Selecciona un Estudiante --</option>';
-                studentsData.students.forEach(st => {
-                    const opt = document.createElement("option");
-                    opt.value = st.student_id;
-                    opt.innerText = `${st.full_name} (${st.course_name}) - Prom: ${Number(st.overall_average).toFixed(2)}`;
-                    select.appendChild(opt);
-                });
+                if (studentsData && Array.isArray(studentsData.students)) {
+                    studentsData.students.forEach(st => {
+                        const opt = document.createElement("option");
+                        opt.value = st.student_id;
+                        opt.innerText = `${st.full_name} (${st.course_name}) - Prom: ${Number(st.overall_average).toFixed(2)}`;
+                        select.appendChild(opt);
+                    });
+                }
             } catch (err) {
                 showToast("Error cargando estudiantes: " + err.message, "error");
             }
@@ -929,6 +1289,7 @@ def get_dashboard_html():
             if (input.files && input.files[0]) {
                 const f = input.files[0];
                 document.getElementById("fileLabel").innerText = `Archivo seleccionado: ${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
+                document.getElementById("btnPreview").disabled = false;
                 document.getElementById("btnUploadSubmit").disabled = false;
             }
         }
@@ -943,6 +1304,9 @@ def get_dashboard_html():
 
             const formData = new FormData();
             formData.append("file", input.files[0]);
+            if (currentMapping) {
+                formData.append("mapping_json", JSON.stringify(currentMapping));
+            }
 
             const submitBtn = document.getElementById("btnUploadSubmit");
             const loader = document.getElementById("uploadLoading");
@@ -953,7 +1317,7 @@ def get_dashboard_html():
             resCard.classList.add("hidden");
 
             try {
-                const res = await fetch("/api/upload-excel", {
+                const res = await fetch("/api/confirm-and-process", {
                     method: "POST",
                     body: formData
                 });
@@ -965,32 +1329,57 @@ def get_dashboard_html():
                     throw new Error(data.detail || "Error en el procesamiento");
                 }
 
-                resCard.className = "mt-6 p-4 rounded-lg border bg-emerald-50 border-emerald-300 text-emerald-900";
+                const recon = data.reconciliation;
+                resCard.className = "mt-6 p-4 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 shadow-sm";
                 resCard.innerHTML = `
                     <div class="flex items-center space-x-2 font-bold mb-2">
                         <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
-                        <span>¡Archivo Excel Procesado y Pipeline Ejecutado con Éxito!</span>
+                        <span>¡Archivo Excel Procesado y Pipeline Medallón Ejecutado con Éxito!</span>
                     </div>
-                    <p class="mb-2">Se leyeron e importaron las siguientes hojas: <strong>${data.details.sheets_imported.join(", ")}</strong></p>
-                    <p class="text-xs text-emerald-700">Las métricas analíticas en PostgreSQL (school_dw) han sido recalculadas en tiempo real.</p>
+                    <p class="text-xs mb-3 text-emerald-800">${recon.message}</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 text-center">
+                        <div class="bg-white p-2 rounded-lg border border-emerald-200">
+                            <span class="text-[10px] text-slate-500 block uppercase">Filas Excel</span>
+                            <span class="font-bold text-slate-900 text-sm">${recon.overall.total_excel_rows}</span>
+                        </div>
+                        <div class="bg-white p-2 rounded-lg border border-emerald-200">
+                            <span class="text-[10px] text-emerald-700 block uppercase">Filas Válidas</span>
+                            <span class="font-bold text-emerald-800 text-sm">${recon.overall.total_valid_rows}</span>
+                        </div>
+                        <div class="bg-white p-2 rounded-lg border border-rose-200">
+                            <span class="text-[10px] text-rose-700 block uppercase">Cuarentena</span>
+                            <span class="font-bold text-rose-800 text-sm">${recon.overall.total_quarantined_rows}</span>
+                        </div>
+                        <div class="bg-white p-2 rounded-lg border border-blue-200">
+                            <span class="text-[10px] text-blue-700 block uppercase">Normalizadas</span>
+                            <span class="font-bold text-blue-800 text-sm">${recon.overall.total_normalized_rows}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="switchTab('reconciliacion')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-sm transition">
+                            <i class="fa-solid fa-scale-balanced mr-1"></i> Ver Reporte de Reconciliación Detallado
+                        </button>
+                        <button onclick="switchTab('resumen')" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-xs font-semibold shadow-sm transition">
+                            <i class="fa-solid fa-chart-pie mr-1"></i> Ver Dashboard Analítico Gold
+                        </button>
+                    </div>
                 `;
                 resCard.classList.remove("hidden");
 
-                showToast("¡Archivo Excel procesado con éxito!", "success");
-                // Reload dashboard data
+                showToast("¡Archivo procesado y reconciliado con éxito!", "success");
                 loadDashboardData();
                 studentsData = null;
                 errorsData = null;
             } catch (err) {
                 loader.classList.add("hidden");
                 submitBtn.disabled = false;
-                resCard.className = "mt-6 p-4 rounded-lg border bg-rose-50 border-rose-300 text-rose-900";
+                resCard.className = "mt-6 p-4 rounded-xl border bg-rose-50 border-rose-300 text-rose-900 shadow-sm";
                 resCard.innerHTML = `
                     <div class="flex items-center space-x-2 font-bold mb-1">
                         <i class="fa-solid fa-circle-xmark text-rose-600 text-base"></i>
                         <span>Error al procesar el archivo Excel</span>
                     </div>
-                    <p>${err.message}</p>
+                    <p class="text-xs text-rose-800">${err.message}</p>
                 `;
                 resCard.classList.remove("hidden");
                 showToast("Error: " + err.message, "error");

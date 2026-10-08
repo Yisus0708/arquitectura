@@ -37,11 +37,11 @@ def test_no_duplicate_pks_in_silver():
 def test_no_unexpected_nulls_in_silver_mandatory_fields():
     """Verifies that mandatory columns in silver contain no nulls."""
     checks = [
-        ("silver.courses", ["course_id", "course_name", "grade_level", "academic_year"]),
-        ("silver.subjects", ["subject_id", "subject_name", "course_id", "department"]),
-        ("silver.students", ["student_id", "first_name", "last_name", "email", "course_id"]),
-        ("silver.assessments", ["assessment_id", "subject_id", "weight_percentage", "assessment_date"]),
-        ("silver.grades", ["grade_id", "assessment_id", "student_id", "score", "submission_date"]),
+        ("silver.courses", ["course_id", "course_name"]),
+        ("silver.subjects", ["subject_id", "subject_name"]),
+        ("silver.students", ["student_id", "first_name", "last_name"]),
+        ("silver.assessments", ["assessment_id", "assessment_name", "weight_percentage"]),
+        ("silver.grades", ["grade_id", "assessment_id", "student_id", "score"]),
     ]
     for table, cols in checks:
         for col in cols:

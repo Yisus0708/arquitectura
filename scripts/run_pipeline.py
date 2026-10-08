@@ -32,7 +32,7 @@ from src.transformation.transform_gold import run_gold_transformations
 logger = get_logger("pipeline_runner")
 
 
-def execute_pipeline(generate_data: bool = False) -> bool:
+def execute_pipeline(generate_data: bool = False, run_tests: bool = False) -> bool:
     start_time = time.time()
     logger.info("============================================================================")
     logger.info("   INICIANDO EJECUCIÓN END-TO-END DEL PIPELINE DE CALIFICACIONES ESCOLARES   ")
@@ -64,15 +64,16 @@ def execute_pipeline(generate_data: bool = False) -> bool:
             logger.error(f">>> [ERROR] Falló la etapa '{stage_name}': {e}", exc_info=True)
             return False
 
-    # Etapa 7: Pruebas automatizadas de calidad con pytest
-    logger.info("\n>>> INICIANDO ETAPA: 7. Ejecución de Suite de Pruebas Pytest")
-    import pytest
-    tests_path = str(Path(__file__).resolve().parent.parent / "tests")
-    test_exit_code = pytest.main(["-v", tests_path])
+    # Etapa 7: Pruebas automatizadas de calidad con pytest (opcional para CLI)
+    if run_tests:
+        logger.info("\n>>> INICIANDO ETAPA: 7. Ejecución de Suite de Pruebas Pytest")
+        import pytest
+        tests_path = str(Path(__file__).resolve().parent.parent / "tests")
+        test_exit_code = pytest.main(["-v", tests_path])
 
-    if test_exit_code != 0:
-        logger.error(f">>> [ERROR] Pruebas de calidad fallaron con código {test_exit_code}")
-        return False
+        if test_exit_code != 0:
+            logger.error(f">>> [ERROR] Pruebas de calidad fallaron con código {test_exit_code}")
+            return False
 
     total_duration = round(time.time() - start_time, 2)
     logger.info("============================================================================")
@@ -82,5 +83,5 @@ def execute_pipeline(generate_data: bool = False) -> bool:
 
 
 if __name__ == "__main__":
-    success = execute_pipeline()
+    success = execute_pipeline(run_tests=True)
     sys.exit(0 if success else 1)

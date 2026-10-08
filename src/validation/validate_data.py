@@ -1,12 +1,12 @@
 """
-Data Validation Module.
-Enforces data quality contracts, schema conformance, range checks, referential integrity,
-and business rules (such as subject assessment weights summing to 100%).
-Invalid records are never deleted; they are quarantined in data/errors/ with an error_reason.
-Valid records are written to data/processed/ for subsequent database loading.
-Raw data remains strictly immutable.
+Data Validation and Quality Assurance Module.
+Aplica validaciones estrictas, cuarentena de errores con motivos detallados,
+conversión de texto con comas a flotantes (con auditoría), normalización de género
+y nombres, validación dinámica de pesos por agrupación (materia + periodo),
+y reglas de fechas relativas a la fecha actual.
 """
 import sys
+import re
 from datetime import datetime, date
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
@@ -21,21 +21,25 @@ from src.utils.logger import get_logger
 
 logger = get_logger("validate_data")
 
+EXPECTED_FILES = [
+    "courses.csv", "subjects.csv", "students.csv", "assessments.csv", "grades.csv"
+]
+
 EXPECTED_SCHEMAS = {
-    "courses.csv": ["course_id", "course_name", "grade_level", "academic_year"],
-    "subjects.csv": ["subject_id", "subject_name", "course_id", "department"],
-    "students.csv": ["student_id", "first_name", "last_name", "email", "course_id", "enrollment_date", "status"],
-    "assessments.csv": ["assessment_id", "subject_id", "assessment_name", "assessment_type", "weight_percentage", "assessment_date"],
-    "grades.csv": ["grade_id", "assessment_id", "student_id", "score", "submission_date", "feedback"]
+    "courses.csv": ["course_id", "course_name"],
+    "subjects.csv": ["subject_id", "subject_name"],
+    "students.csv": ["student_id", "first_name"],
+    "assessments.csv": ["assessment_id", "assessment_name", "weight_percentage"],
+    "grades.csv": ["grade_id", "assessment_id", "student_id", "score"]
 }
 
 
 def is_valid_date(val: Any) -> bool:
-    """Checks if a string or object can be parsed as a valid calendar date."""
+    """Valida si un valor puede ser interpretado como una fecha válida de calendario."""
     if pd.isnull(val):
         return False
     val_str = str(val).strip()
-    if not val_str:
+    if not val_str or val_str in ("nan", "None", ""):
         return False
     for fmt in (
         "%Y-%m-%d %H:%M:%S", "%Y-%m-%d",
@@ -51,8 +55,8 @@ def is_valid_date(val: Any) -> bool:
     return False
 
 
-def parse_date(val: Any) -> Optional[datetime]:
-    """Attempts to parse a date into a datetime object."""
+def parse_date(val: Any) -> Optional[date]:
+    """Parsea una fecha a objeto date."""
     if pd.isnull(val):
         return None
     val_str = str(val).strip()
@@ -63,398 +67,532 @@ def parse_date(val: Any) -> Optional[datetime]:
         "%d-%m-%Y %H:%M:%S", "%d-%m-%Y"
     ):
         try:
-            return datetime.strptime(val_str, fmt)
+            return datetime.strptime(val_str, fmt).date()
         except (ValueError, TypeError):
             continue
     return None
 
 
-def validate_courses(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Validates courses dataset."""
+def validate_courses(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, List[Dict[str, Any]]]:
     errors = []
+    corrections = []
+    if df.empty:
+        return df, pd.DataFrame(columns=list(df.columns) + ["error_reason"]), corrections
+
+    valid_mask = pd.Series(True, index=df.index)
+
+    # 1. Null PK
+    for idx, row in df.iterrows():
+        cid = str(row.get("course_id", "")).strip()
+        if not cid or cid in ("nan", "None"):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = "Null or empty course_id"
+            errors.append(err)
+
+    # 2. Duplicate PK
+    dups = df[valid_mask & df["course_id"].duplicated(keep="first")].index
+    for idx in dups:
+        valid_mask[idx] = False
+        err = df.loc[idx].to_dict()
+        err["error_reason"] = f"Duplicate course_id primary key: {err['course_id']}"
+        errors.append(err)
+
+    valid_df = df[valid_mask].copy()
+    errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
+    return valid_df, errors_df, corrections
+
+
+def validate_subjects(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, List[Dict[str, Any]]]:
+    errors = []
+    corrections = []
+    if df.empty:
+        return df, pd.DataFrame(columns=list(df.columns) + ["error_reason"]), corrections
+
+    valid_mask = pd.Series(True, index=df.index)
+
+    # Mandatory subject_id, subject_name
+    for idx, row in df.iterrows():
+        sid = str(row.get("subject_id", "")).strip()
+        sname = str(row.get("subject_name", "")).strip()
+        if not sid or sid in ("nan", "None"):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = "Null or empty subject_id"
+            errors.append(err)
+        elif not sname or sname in ("nan", "None"):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = "Null or empty subject_name"
+            errors.append(err)
+
+    # Duplicate PK
+    dups = df[valid_mask & df["subject_id"].duplicated(keep="first")].index
+    for idx in dups:
+        valid_mask[idx] = False
+        err = df.loc[idx].to_dict()
+        err["error_reason"] = f"Duplicate subject_id: {err['subject_id']}"
+        errors.append(err)
+
+    valid_df = df[valid_mask].copy()
+    errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
+    return valid_df, errors_df, corrections
+
+
+def validate_students(
+    df: pd.DataFrame,
+    valid_courses_ids: Optional[set] = None
+) -> Tuple[pd.DataFrame, pd.DataFrame, List[Dict[str, Any]]]:
+    errors = []
+    corrections = []
+    if df.empty:
+        return df, pd.DataFrame(columns=list(df.columns) + ["error_reason"]), corrections
+
+    valid_mask = pd.Series(True, index=df.index)
+    today = date.today()
+
+    # Pass 1: Normalizations for names and genders
+    for idx, row in df.iterrows():
+        # Trim and normalize names
+        orig_first = str(row.get("first_name", ""))
+        clean_first = " ".join(orig_first.split()).strip()
+        if clean_first != orig_first and orig_first not in ("nan", "None"):
+            corrections.append({
+                "entity": "students",
+                "id": str(row.get("student_id", "")),
+                "field": "first_name",
+                "original": orig_first,
+                "corrected": clean_first,
+                "reason": "Espacios y formato en nombre corregidos"
+            })
+            df.at[idx, "first_name"] = clean_first
+
+        # Normalize gender
+        raw_gender = str(row.get("gender", "")).strip()
+        if raw_gender and raw_gender not in ("nan", "None"):
+            g_low = raw_gender.lower()
+            std_gender = None
+            if g_low in ("m", "masculino", "male", "hombre"):
+                std_gender = "M"
+            elif g_low in ("f", "femenino", "female", "fem", "mujer"):
+                std_gender = "F"
+
+            if std_gender and std_gender != raw_gender:
+                corrections.append({
+                    "entity": "students",
+                    "id": str(row.get("student_id", "")),
+                    "field": "gender",
+                    "original": raw_gender,
+                    "corrected": std_gender,
+                    "reason": "Normalización de género a estándar ('M'/'F')"
+                })
+                df.at[idx, "gender"] = std_gender
+
+    # Pass 2: Hard Errors and Quarantining
+    for idx, row in df.iterrows():
+        sid = str(row.get("student_id", "")).strip()
+        if not sid or sid in ("nan", "None"):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = "Null or empty student_id"
+            errors.append(err)
+            continue
+
+        # Check birth_date validity (not future, not impossible like 1900 or 2031)
+        bdate_val = row.get("birth_date")
+        if pd.notna(bdate_val) and str(bdate_val).strip() not in ("", "nan", "None"):
+            pdate = parse_date(bdate_val)
+            if not pdate:
+                valid_mask[idx] = False
+                err = row.to_dict()
+                err["error_reason"] = f"Invalid birth_date format: '{bdate_val}'"
+                errors.append(err)
+                continue
+            elif pdate.year < 1920 or pdate > today:
+                valid_mask[idx] = False
+                err = row.to_dict()
+                err["error_reason"] = f"Impossible birth_date: '{bdate_val}' (out of biological bounds)"
+                errors.append(err)
+                continue
+
+        # Check course FK if valid_courses_ids is supplied and row has course_id
+        cid = str(row.get("course_id", "")).strip()
+        if cid and cid not in ("nan", "None") and valid_courses_ids is not None and len(valid_courses_ids) > 0:
+            if cid not in valid_courses_ids:
+                valid_mask[idx] = False
+                err = row.to_dict()
+                err["error_reason"] = f"curso_id inexistente ({cid})"
+                errors.append(err)
+                continue
+
+    # Duplicate student_id
+    dups_sid = df[valid_mask & df["student_id"].duplicated(keep="first")].index
+    for idx in dups_sid:
+        valid_mask[idx] = False
+        err = df.loc[idx].to_dict()
+        err["error_reason"] = f"estudiante_id duplicado: {err['student_id']}"
+        errors.append(err)
+
+    # Duplicate document_number (if present)
+    has_doc = valid_mask & df["document_number"].notna() & (df["document_number"].astype(str).str.strip().ne("")) & (df["document_number"].astype(str).ne("nan"))
+    dups_doc = df[has_doc & df["document_number"].duplicated(keep="first")].index
+    for idx in dups_doc:
+        valid_mask[idx] = False
+        err = df.loc[idx].to_dict()
+        err["error_reason"] = f"documento duplicado: {err['document_number']}"
+        errors.append(err)
+
+    valid_df = df[valid_mask].copy()
+    errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
+    return valid_df, errors_df, corrections
+
+
+def validate_assessments(
+    df: pd.DataFrame,
+    valid_subjects_ids: Optional[set] = None
+) -> Tuple[pd.DataFrame, pd.DataFrame, List[Dict[str, Any]]]:
+    errors = []
+    corrections = []
+    if df.empty:
+        return df, pd.DataFrame(columns=list(df.columns) + ["error_reason"]), corrections
+
     valid_mask = pd.Series(True, index=df.index)
 
     # 1. Null check on mandatory columns
-    for col in ["course_id", "course_name", "grade_level", "academic_year"]:
-        null_idx = df[df[col].isnull() | (df[col].astype(str).str.strip() == "")].index
-        for idx in null_idx:
-            if valid_mask[idx]:
-                valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                err_row["error_reason"] = f"Null value in mandatory column: {col}"
-                errors.append(err_row)
+    for idx, row in df.iterrows():
+        aid = str(row.get("assessment_id", "")).strip()
+        aname = str(row.get("assessment_name", "")).strip()
+        wval = str(row.get("weight_percentage", "")).strip()
 
-    # 2. Duplicate PK
-    dups = df[df["course_id"].duplicated(keep="first")].index
-    for idx in dups:
-        if valid_mask[idx]:
+        if not aid or aid in ("nan", "None"):
             valid_mask[idx] = False
-            err_row = df.loc[idx].to_dict()
-            err_row["error_reason"] = "Duplicate course_id primary key"
-            errors.append(err_row)
+            err = row.to_dict()
+            err["error_reason"] = "Null or empty assessment_id"
+            errors.append(err)
+            continue
 
-    valid_df = df[valid_mask].copy()
-    errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
-    return valid_df, errors_df
+        if not aname or aname in ("nan", "None"):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = "Null or empty assessment_name"
+            errors.append(err)
+            continue
 
-
-def validate_subjects(df: pd.DataFrame, valid_courses_ids: set) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Validates subjects dataset."""
-    errors = []
-    valid_mask = pd.Series(True, index=df.index)
-
-    for col in ["subject_id", "subject_name", "course_id"]:
-        null_idx = df[df[col].isnull() | (df[col].astype(str).str.strip() == "")].index
-        for idx in null_idx:
-            if valid_mask[idx]:
+        # Check numeric weight
+        w_clean = wval.replace(",", ".")
+        try:
+            w_float = float(w_clean)
+            if w_float < 0.0 or w_float > 100.0:
                 valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                err_row["error_reason"] = f"Null value in mandatory column: {col}"
-                errors.append(err_row)
+                err = row.to_dict()
+                err["error_reason"] = f"Weight percentage out of allowed range [0-100%]: {w_float}"
+                errors.append(err)
+                continue
+        except (ValueError, TypeError):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = f"Non-numeric weight percentage: '{wval}'"
+            errors.append(err)
+            continue
+
+        # Check FK subject_id if subjects list provided
+        sub_id = str(row.get("subject_id", "")).strip()
+        if sub_id and sub_id not in ("nan", "None") and valid_subjects_ids is not None and len(valid_subjects_ids) > 0:
+            if sub_id not in valid_subjects_ids:
+                valid_mask[idx] = False
+                err = row.to_dict()
+                err["error_reason"] = f"Foreign key violation: subject_id '{sub_id}' does not exist"
+                errors.append(err)
+                continue
 
     # Duplicate PK
-    dups = df[df["subject_id"].duplicated(keep="first")].index
-    for idx in dups:
-        if valid_mask[idx]:
-            valid_mask[idx] = False
-            err_row = df.loc[idx].to_dict()
-            err_row["error_reason"] = "Duplicate subject_id primary key"
-            errors.append(err_row)
+    dups_aid = df[valid_mask & df["assessment_id"].duplicated(keep="first")].index
+    for idx in dups_aid:
+        valid_mask[idx] = False
+        err = df.loc[idx].to_dict()
+        err["error_reason"] = f"Duplicate assessment_id: {err['assessment_id']}"
+        errors.append(err)
 
-    # FK to courses (only if valid courses exist)
-    if valid_courses_ids:
-        fk_err = df[~df["course_id"].astype(str).isin(valid_courses_ids)].index
-        for idx in fk_err:
-            if valid_mask[idx]:
-                valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                err_row["error_reason"] = f"Foreign key violation: course_id '{df.loc[idx, 'course_id']}' does not exist"
-                errors.append(err_row)
-
-    valid_df = df[valid_mask].copy()
-    errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
-    return valid_df, errors_df
-
-
-def validate_students(df: pd.DataFrame, valid_courses_ids: set) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Validates students dataset."""
-    errors = []
-    valid_mask = pd.Series(True, index=df.index)
-
-    # Mandatory fields
-    for col in ["student_id", "first_name", "last_name", "course_id"]:
-        null_idx = df[df[col].isnull() | (df[col].astype(str).str.strip() == "")].index
-        for idx in null_idx:
-            if valid_mask[idx]:
-                valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                err_row["error_reason"] = f"Null value in mandatory column: {col}"
-                errors.append(err_row)
-
-    # Duplicate student_id
-    dups = df[df["student_id"].duplicated(keep="first")].index
-    for idx in dups:
-        if valid_mask[idx]:
-            valid_mask[idx] = False
-            err_row = df.loc[idx].to_dict()
-            err_row["error_reason"] = f"Duplicate student_id primary key: {df.loc[idx, 'student_id']}"
-            errors.append(err_row)
-
-    # FK course_id
-    if valid_courses_ids:
-        fk_err = df[~df["course_id"].astype(str).isin(valid_courses_ids)].index
-        for idx in fk_err:
-            if valid_mask[idx]:
-                valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                err_row["error_reason"] = f"Foreign key violation: course_id '{df.loc[idx, 'course_id']}' does not exist"
-                errors.append(err_row)
-
-    # Date check
-    for idx, row in df.iterrows():
-        if valid_mask[idx] and not is_valid_date(row["enrollment_date"]):
-            valid_mask[idx] = False
-            err_row = row.to_dict()
-            err_row["error_reason"] = f"Invalid enrollment_date format: {row['enrollment_date']}"
-            errors.append(err_row)
-
-    valid_df = df[valid_mask].copy()
-    errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
-    return valid_df, errors_df
-
-
-def validate_assessments(df: pd.DataFrame, valid_subjects_ids: set) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Validates assessments dataset.
-    Enforces percentage range 0-100% and the business rule:
-    'Los porcentajes de las evaluaciones de cada materia suman 100%'
-    """
-    errors = []
-    valid_mask = pd.Series(True, index=df.index)
-
-    # 1. Mandatory columns null check
-    for col in ["assessment_id", "subject_id", "assessment_name", "weight_percentage", "assessment_date"]:
-        null_idx = df[df[col].isnull() | (df[col].astype(str).str.strip() == "")].index
-        for idx in null_idx:
-            if valid_mask[idx]:
-                valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                err_row["error_reason"] = f"Null value in mandatory column: {col}"
-                errors.append(err_row)
-
-    # 2. Duplicate PK
-    dups = df[df["assessment_id"].duplicated(keep="first")].index
-    for idx in dups:
-        if valid_mask[idx]:
-            valid_mask[idx] = False
-            err_row = df.loc[idx].to_dict()
-            err_row["error_reason"] = f"Duplicate assessment_id: {df.loc[idx, 'assessment_id']}"
-            errors.append(err_row)
-
-    # 3. FK subject_id
-    fk_err = df[~df["subject_id"].astype(str).isin(valid_subjects_ids)].index
-    for idx in fk_err:
-        if valid_mask[idx]:
-            valid_mask[idx] = False
-            err_row = df.loc[idx].to_dict()
-            err_row["error_reason"] = f"Foreign key violation: subject_id '{df.loc[idx, 'subject_id']}' does not exist"
-            errors.append(err_row)
-
-    # 4. Range check for weights (0.0 to 100.0)
-    for idx, row in df.iterrows():
-        if valid_mask[idx]:
-            try:
-                w = float(str(row["weight_percentage"]).replace(",", ".").strip())
-                if w < 0.0 or w > 100.0:
-                    valid_mask[idx] = False
-                    err_row = row.to_dict()
-                    err_row["error_reason"] = f"Weight percentage out of range [0-100%]: {w}"
-                    errors.append(err_row)
-            except (ValueError, TypeError):
-                valid_mask[idx] = False
-                err_row = row.to_dict()
-                err_row["error_reason"] = f"Non-numeric weight percentage: {row['weight_percentage']}"
-                errors.append(err_row)
-
-    # 5. Date validation
-    for idx, row in df.iterrows():
-        if valid_mask[idx] and not is_valid_date(row["assessment_date"]):
-            valid_mask[idx] = False
-            err_row = row.to_dict()
-            err_row["error_reason"] = f"Invalid assessment_date format: {row['assessment_date']}"
-            errors.append(err_row)
-
-    # 6. Critical Business Rule: Sum of weights for each subject must equal 100.0%
+    # 2. Dynamic Weight Summing Rule
+    # Group by (subject_id, period_id) if period_id exists, else by subject_id
     interim_valid = df[valid_mask].copy()
     if not interim_valid.empty:
-        # Convert weight_percentage to float for summation
-        interim_valid["numeric_weight"] = interim_valid["weight_percentage"].astype(str).str.replace(",", ".").astype(float)
-        subject_weight_sums = interim_valid.groupby("subject_id")["numeric_weight"].sum()
+        interim_valid["clean_w"] = interim_valid["weight_percentage"].astype(str).str.replace(",", ".").astype(float)
+        
+        has_period = "period_id" in interim_valid.columns and not interim_valid["period_id"].astype(str).str.strip().isin(["", "nan", "None"]).all()
+        group_cols = ["subject_id", "period_id"] if has_period else ["subject_id"]
 
-        invalid_sum_subjects = set(subject_weight_sums[abs(subject_weight_sums - 100.0) > 0.01].index)
-        if invalid_sum_subjects:
-            for idx in interim_valid[interim_valid["subject_id"].isin(invalid_sum_subjects)].index:
-                valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                actual_sum = round(float(subject_weight_sums.get(err_row["subject_id"], 0.0)), 2)
-                err_row["error_reason"] = f"Subject assessment weights sum to {actual_sum}%, expected 100.0%"
-                errors.append(err_row)
+        grouped_sums = interim_valid.groupby(group_cols)["clean_w"].sum()
+        
+        # Identificar grupos que no sumen 100% (+/- 0.5% tolerancia)
+        invalid_groups = set()
+        for grp_key, total_w in grouped_sums.items():
+            if abs(total_w - 100.0) > 0.5 and abs(total_w - 1.0) > 0.01:
+                invalid_groups.add(grp_key)
+
+        if invalid_groups:
+            for idx in interim_valid.index:
+                row = interim_valid.loc[idx]
+                grp_val = tuple(row[c] for c in group_cols) if len(group_cols) > 1 else row[group_cols[0]]
+                if grp_val in invalid_groups:
+                    valid_mask[idx] = False
+                    err = df.loc[idx].to_dict()
+                    tot = round(float(grouped_sums[grp_val]), 2)
+                    err["error_reason"] = f"pesos de evaluación del grupo {grp_val} suman {tot}%, esperado 100%"
+                    errors.append(err)
 
     valid_df = df[valid_mask].copy()
     errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
-    return valid_df, errors_df
+    return valid_df, errors_df, corrections
 
 
 def validate_grades(
     df: pd.DataFrame,
     valid_students_ids: set,
-    valid_assessments_ids: set
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Validates grades dataset:
-    - Mandatory null checks
-    - PK uniqueness
-    - Text comma numeric errors
-    - Scale bounds: 0.0 <= score <= 5.0
-    - FK references to valid students and valid assessments
-    - Valid submission dates and future date restrictions
-    """
+    valid_assessments_ids: set,
+    max_scale: float = 5.0
+) -> Tuple[pd.DataFrame, pd.DataFrame, List[Dict[str, Any]]]:
     errors = []
+    corrections = []
+    if df.empty:
+        return df, pd.DataFrame(columns=list(df.columns) + ["error_reason"]), corrections
+
     valid_mask = pd.Series(True, index=df.index)
+    today = date.today()
 
-    # 1. Mandatory columns null check
-    for col in ["grade_id", "assessment_id", "student_id", "score", "submission_date"]:
-        null_idx = df[df[col].isnull() | (df[col].astype(str).str.strip().isin(["", "nan", "None"]))].index
-        for idx in null_idx:
-            if valid_mask[idx]:
-                valid_mask[idx] = False
-                err_row = df.loc[idx].to_dict()
-                err_row["error_reason"] = f"Null value in mandatory column: {col}"
-                errors.append(err_row)
-
-    # 2. Duplicate PK
-    dups = df[df["grade_id"].duplicated(keep="first")].index
-    for idx in dups:
-        if valid_mask[idx]:
+    # Pass 1: Deduplicate identical rows (seeded duplicate rows)
+    # Deduplicate on (student_id, assessment_id, score, submission_date)
+    dup_cols = [c for c in ["student_id", "assessment_id", "score", "submission_date"] if c in df.columns]
+    if len(dup_cols) >= 2:
+        dups_idx = df[df.duplicated(subset=dup_cols, keep="first")].index
+        for idx in dups_idx:
             valid_mask[idx] = False
-            err_row = df.loc[idx].to_dict()
-            err_row["error_reason"] = f"Duplicate grade_id primary key: {df.loc[idx, 'grade_id']}"
-            errors.append(err_row)
+            err = df.loc[idx].to_dict()
+            err["error_reason"] = "fila duplicada"
+            errors.append(err)
 
-    # 3. Score validations
+    # Pass 2: Value conversions and error isolation
     for idx, row in df.iterrows():
-        if valid_mask[idx]:
-            s_val = row["score"]
-            s_str = str(s_val).strip()
+        if not valid_mask[idx]:
+            continue
 
-            # Catch explicit text comma numbers (e.g. '2,2', '4,0')
-            if "," in s_str:
-                valid_mask[idx] = False
-                err_row = row.to_dict()
-                err_row["error_reason"] = f"Invalid numeric format: score contains comma text '{s_str}'"
-                errors.append(err_row)
-                continue
-
-            try:
-                s_float = float(s_str)
-                if s_float < 0.0 or s_float > 5.0:
-                    valid_mask[idx] = False
-                    err_row = row.to_dict()
-                    err_row["error_reason"] = f"Grade score {s_float} out of allowed scale [0.0 - 5.0]"
-                    errors.append(err_row)
-                    continue
-            except (ValueError, TypeError):
-                valid_mask[idx] = False
-                err_row = row.to_dict()
-                err_row["error_reason"] = f"Invalid non-numeric grade score: '{s_val}'"
-                errors.append(err_row)
-                continue
-
-    # 4. FK to valid students
-    for idx, row in df.iterrows():
-        if valid_mask[idx] and str(row["student_id"]).strip() not in valid_students_ids:
+        raw_score = row.get("score")
+        if pd.isna(raw_score) or str(raw_score).strip() in ("", "nan", "None"):
             valid_mask[idx] = False
-            err_row = row.to_dict()
-            err_row["error_reason"] = f"Foreign key violation: student_id '{row['student_id']}' does not exist"
-            errors.append(err_row)
+            err = row.to_dict()
+            err["error_reason"] = "nota nula"
+            errors.append(err)
+            continue
 
-    # 5. FK to valid assessments
-    for idx, row in df.iterrows():
-        if valid_mask[idx] and str(row["assessment_id"]).strip() not in valid_assessments_ids:
-            valid_mask[idx] = False
-            err_row = row.to_dict()
-            err_row["error_reason"] = f"Foreign key violation: assessment_id '{row['assessment_id']}' does not exist or was rejected"
-            errors.append(err_row)
+        score_str = str(raw_score).strip()
 
-    # 6. Submission date format & future dates check
-    for idx, row in df.iterrows():
-        if valid_mask[idx]:
-            sub_date = row["submission_date"]
-            if not is_valid_date(sub_date):
+        # Handle comma decimals: convert and log transformation
+        if re.match(r"^-?\d+,\d+$", score_str):
+            clean_num_str = score_str.replace(",", ".")
+            corrections.append({
+                "entity": "grades",
+                "id": str(row.get("grade_id", idx)),
+                "field": "score",
+                "original": score_str,
+                "corrected": clean_num_str,
+                "reason": f"Conversión de decimal con coma '{score_str}' a formato punto '{clean_num_str}'"
+            })
+            df.at[idx, "score"] = clean_num_str
+            score_str = clean_num_str
+
+        # Check numeric conversion
+        try:
+            score_float = float(score_str)
+            if score_float < 0.0 or score_float > max_scale:
                 valid_mask[idx] = False
-                err_row = row.to_dict()
-                err_row["error_reason"] = f"Invalid submission_date format: {sub_date}"
-                errors.append(err_row)
+                err = row.to_dict()
+                err["error_reason"] = f"nota fuera de rango ({score_float})"
+                errors.append(err)
                 continue
+        except (ValueError, TypeError):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = f"nota no numérica ('{raw_score}')"
+            errors.append(err)
+            continue
 
-            parsed_dt = parse_date(sub_date)
-            if parsed_dt and parsed_dt.year > 2026:
+        # Foreign Key: student_id
+        sid = str(row.get("student_id", "")).strip()
+        if valid_students_ids and sid not in valid_students_ids:
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = f"estudiante_id inexistente ({sid})"
+            errors.append(err)
+            continue
+
+        # Foreign Key: assessment_id
+        aid = str(row.get("assessment_id", "")).strip()
+        if valid_assessments_ids and aid not in valid_assessments_ids:
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = f"evaluacion_id inexistente ({aid})"
+            errors.append(err)
+            continue
+
+        # Date validations: valid format and not future
+        sub_date = row.get("submission_date")
+        if pd.notna(sub_date) and str(sub_date).strip() not in ("", "nan", "None"):
+            pdate = parse_date(sub_date)
+            if not pdate:
                 valid_mask[idx] = False
-                err_row = row.to_dict()
-                err_row["error_reason"] = f"Future submission date not allowed: {sub_date}"
-                errors.append(err_row)
+                err = row.to_dict()
+                err["error_reason"] = f"fecha inválida (texto '{sub_date}')"
+                errors.append(err)
+                continue
+            elif pdate > today:
+                valid_mask[idx] = False
+                err = row.to_dict()
+                err["error_reason"] = f"fecha futura ({sub_date})"
+                errors.append(err)
                 continue
 
     valid_df = df[valid_mask].copy()
     errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
-    return valid_df, errors_df
+    return valid_df, errors_df, corrections
 
 
-def run_validation() -> Dict[str, Dict[str, int]]:
+def validate_attendance(
+    df: pd.DataFrame,
+    valid_students_ids: Optional[set] = None
+) -> Tuple[pd.DataFrame, pd.DataFrame, List[Dict[str, Any]]]:
+    errors = []
+    corrections = []
+    if df.empty:
+        return df, pd.DataFrame(columns=list(df.columns) + ["error_reason"]), corrections
+
+    valid_mask = pd.Series(True, index=df.index)
+
+    for idx, row in df.iterrows():
+        sid = str(row.get("student_id", "")).strip()
+        if not sid or sid in ("nan", "None"):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = "Null or empty student_id"
+            errors.append(err)
+            continue
+
+        # Check total_classes and absences
+        tot_str = str(row.get("total_classes", "")).strip()
+        abs_str = str(row.get("absences", "")).strip()
+
+        try:
+            tot = int(float(tot_str))
+            absences = int(float(abs_str))
+
+            if absences < 0:
+                valid_mask[idx] = False
+                err = row.to_dict()
+                err["error_reason"] = "inasistencias negativas"
+                errors.append(err)
+                continue
+
+            if absences > tot:
+                valid_mask[idx] = False
+                err = row.to_dict()
+                err["error_reason"] = "inasistencias > días de clase"
+                errors.append(err)
+                continue
+        except (ValueError, TypeError):
+            valid_mask[idx] = False
+            err = row.to_dict()
+            err["error_reason"] = "Valores de asistencia no enteros"
+            errors.append(err)
+            continue
+
+    valid_df = df[valid_mask].copy()
+    errors_df = pd.DataFrame(errors) if errors else pd.DataFrame(columns=list(df.columns) + ["error_reason"])
+    return valid_df, errors_df, corrections
+
+
+def run_validation(max_scale: float = 5.0) -> Dict[str, Any]:
     """
-    Executes full validation pipeline across all raw files.
-    Writes valid records to data/processed/ and dirty records to data/errors/.
-    Returns summary metrics.
+    Ejecuta el pipeline de validación y cuarentena para todas las entidades.
+    Escribe data/processed/ y data/errors/, registrando correcciones de comas y normalizaciones.
     """
-    logger.info("Starting raw data validation process...")
+    logger.info("Iniciando validación y cuarentena de datos raw...")
     PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
     ERRORS_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     summary = {}
+    all_corrections = []
 
-    for fname in EXPECTED_SCHEMAS.keys():
-        fpath = RAW_DATA_DIR / fname
-        if not fpath.exists():
-            raise FileNotFoundError(f"Validation aborted: Required raw file not found: {fpath}")
-
-    # 1. Courses
-    raw_courses = pd.read_csv(RAW_DATA_DIR / "courses.csv", dtype=str)
-    valid_courses, err_courses = validate_courses(raw_courses)
-    valid_courses.to_csv(PROCESSED_DATA_DIR / "courses.csv", index=False, encoding="utf-8")
+    # 1. Cursos
+    raw_courses = pd.read_csv(RAW_DATA_DIR / "courses.csv", dtype=str) if (RAW_DATA_DIR / "courses.csv").exists() else pd.DataFrame()
+    val_courses, err_courses, corr_courses = validate_courses(raw_courses)
+    val_courses.to_csv(PROCESSED_DATA_DIR / "courses.csv", index=False, encoding="utf-8")
     err_courses.to_csv(ERRORS_DATA_DIR / "courses_errors.csv", index=False, encoding="utf-8")
-    summary["courses"] = {"total": len(raw_courses), "valid": len(valid_courses), "errors": len(err_courses)}
+    valid_courses_ids = set(val_courses["course_id"].astype(str).str.strip()) if not val_courses.empty else set()
+    all_corrections.extend(corr_courses)
+    summary["courses"] = {"total": len(raw_courses), "valid": len(val_courses), "errors": len(err_courses)}
 
-    valid_courses_ids = set(valid_courses["course_id"].astype(str).str.strip())
-
-    # 2. Subjects
-    raw_subjects = pd.read_csv(RAW_DATA_DIR / "subjects.csv", dtype=str)
-    valid_subjects, err_subjects = validate_subjects(raw_subjects, valid_courses_ids)
-    valid_subjects.to_csv(PROCESSED_DATA_DIR / "subjects.csv", index=False, encoding="utf-8")
+    # 2. Materias
+    raw_subjects = pd.read_csv(RAW_DATA_DIR / "subjects.csv", dtype=str) if (RAW_DATA_DIR / "subjects.csv").exists() else pd.DataFrame()
+    val_subjects, err_subjects, corr_subjects = validate_subjects(raw_subjects)
+    val_subjects.to_csv(PROCESSED_DATA_DIR / "subjects.csv", index=False, encoding="utf-8")
     err_subjects.to_csv(ERRORS_DATA_DIR / "subjects_errors.csv", index=False, encoding="utf-8")
-    summary["subjects"] = {"total": len(raw_subjects), "valid": len(valid_subjects), "errors": len(err_subjects)}
+    valid_subjects_ids = set(val_subjects["subject_id"].astype(str).str.strip()) if not val_subjects.empty else set()
+    all_corrections.extend(corr_subjects)
+    summary["subjects"] = {"total": len(raw_subjects), "valid": len(val_subjects), "errors": len(err_subjects)}
 
-    valid_subjects_ids = set(valid_subjects["subject_id"].astype(str).str.strip())
-
-    # 3. Students
-    raw_students = pd.read_csv(RAW_DATA_DIR / "students.csv", dtype=str)
-    valid_students, err_students = validate_students(raw_students, valid_courses_ids)
-    valid_students.to_csv(PROCESSED_DATA_DIR / "students.csv", index=False, encoding="utf-8")
+    # 3. Estudiantes
+    raw_students = pd.read_csv(RAW_DATA_DIR / "students.csv", dtype=str) if (RAW_DATA_DIR / "students.csv").exists() else pd.DataFrame()
+    val_students, err_students, corr_students = validate_students(raw_students, valid_courses_ids)
+    val_students.to_csv(PROCESSED_DATA_DIR / "students.csv", index=False, encoding="utf-8")
     err_students.to_csv(ERRORS_DATA_DIR / "students_errors.csv", index=False, encoding="utf-8")
-    summary["students"] = {"total": len(raw_students), "valid": len(valid_students), "errors": len(err_students)}
+    valid_students_ids = set(val_students["student_id"].astype(str).str.strip()) if not val_students.empty else set()
+    all_corrections.extend(corr_students)
+    summary["students"] = {"total": len(raw_students), "valid": len(val_students), "errors": len(err_students)}
 
-    valid_students_ids = set(valid_students["student_id"].astype(str).str.strip())
-
-    # 4. Assessments
-    raw_assessments = pd.read_csv(RAW_DATA_DIR / "assessments.csv", dtype=str)
-    valid_assessments, err_assessments = validate_assessments(raw_assessments, valid_subjects_ids)
-    valid_assessments.to_csv(PROCESSED_DATA_DIR / "assessments.csv", index=False, encoding="utf-8")
+    # 4. Evaluaciones
+    raw_assessments = pd.read_csv(RAW_DATA_DIR / "assessments.csv", dtype=str) if (RAW_DATA_DIR / "assessments.csv").exists() else pd.DataFrame()
+    val_assessments, err_assessments, corr_assessments = validate_assessments(raw_assessments, valid_subjects_ids)
+    val_assessments.to_csv(PROCESSED_DATA_DIR / "assessments.csv", index=False, encoding="utf-8")
     err_assessments.to_csv(ERRORS_DATA_DIR / "assessments_errors.csv", index=False, encoding="utf-8")
-    summary["assessments"] = {"total": len(raw_assessments), "valid": len(valid_assessments), "errors": len(err_assessments)}
+    valid_assessments_ids = set(val_assessments["assessment_id"].astype(str).str.strip()) if not val_assessments.empty else set()
+    all_corrections.extend(corr_assessments)
+    summary["assessments"] = {"total": len(raw_assessments), "valid": len(val_assessments), "errors": len(err_assessments)}
 
-    valid_assessments_ids = set(valid_assessments["assessment_id"].astype(str).str.strip())
-
-    # 5. Grades
-    raw_grades = pd.read_csv(RAW_DATA_DIR / "grades.csv", dtype=str)
-    valid_grades, err_grades = validate_grades(raw_grades, valid_students_ids, valid_assessments_ids)
-    valid_grades.to_csv(PROCESSED_DATA_DIR / "grades.csv", index=False, encoding="utf-8")
+    # 5. Calificaciones
+    raw_grades = pd.read_csv(RAW_DATA_DIR / "grades.csv", dtype=str) if (RAW_DATA_DIR / "grades.csv").exists() else pd.DataFrame()
+    val_grades, err_grades, corr_grades = validate_grades(raw_grades, valid_students_ids, valid_assessments_ids, max_scale=max_scale)
+    val_grades.to_csv(PROCESSED_DATA_DIR / "grades.csv", index=False, encoding="utf-8")
     err_grades.to_csv(ERRORS_DATA_DIR / "grades_errors.csv", index=False, encoding="utf-8")
-    summary["grades"] = {"total": len(raw_grades), "valid": len(valid_grades), "errors": len(err_grades)}
+    all_corrections.extend(corr_grades)
+    summary["grades"] = {"total": len(raw_grades), "valid": len(val_grades), "errors": len(err_grades)}
 
-    # Print summary report
-    print("\n" + "=" * 75)
-    print(f"{'RESUMEN DE VALIDACIÓN DE CALIDAD DE DATOS (DATA QUALITY AUDIT)':^75}")
-    print("=" * 75)
-    print(f"{'Entidad':<16} | {'Revisadas':<10} | {'Válidas':<10} | {'Inválidas':<10} | {'% Calidad':<10}")
-    print("-" * 75)
+    # 6. Asistencia (opcional)
+    if (RAW_DATA_DIR / "attendance.csv").exists():
+        raw_att = pd.read_csv(RAW_DATA_DIR / "attendance.csv", dtype=str)
+        if not raw_att.empty:
+            val_att, err_att, corr_att = validate_attendance(raw_att, valid_students_ids)
+            val_att.to_csv(PROCESSED_DATA_DIR / "attendance.csv", index=False, encoding="utf-8")
+            err_att.to_csv(ERRORS_DATA_DIR / "attendance_errors.csv", index=False, encoding="utf-8")
+            all_corrections.extend(corr_att)
+            summary["attendance"] = {"total": len(raw_att), "valid": len(val_att), "errors": len(err_att)}
 
-    tot_rev = 0
-    tot_val = 0
-    tot_err = 0
-    for entity, counts in summary.items():
-        pct = (counts["valid"] / counts["total"] * 100) if counts["total"] > 0 else 0
-        tot_rev += counts["total"]
-        tot_val += counts["valid"]
-        tot_err += counts["errors"]
-        print(f"{entity:<16} | {counts['total']:<10} | {counts['valid']:<10} | {counts['errors']:<10} | {pct:>8.2f}%")
+    # 7. Periodos y otras tablas opcionales: copiar directo a processed si existen
+    for opt_entity in ["periods", "teachers", "course_subjects", "performance_scale"]:
+        opt_path = RAW_DATA_DIR / f"{opt_entity}.csv"
+        if opt_path.exists():
+            df_opt = pd.read_csv(opt_path, dtype=str)
+            df_opt.to_csv(PROCESSED_DATA_DIR / f"{opt_entity}.csv", index=False, encoding="utf-8")
 
-    print("-" * 75)
-    tot_pct = (tot_val / tot_rev * 100) if tot_rev > 0 else 0
-    print(f"{'TOTAL GENERAL':<16} | {tot_rev:<10} | {tot_val:<10} | {tot_err:<10} | {tot_pct:>8.2f}%")
-    print("=" * 75)
-    logger.info(f"Validation complete: {tot_rev} checked, {tot_val} valid, {tot_err} quarantined into data/errors/")
+    # Guardar registro de correcciones y normalizaciones
+    pd.DataFrame(all_corrections).to_csv(ERRORS_DATA_DIR / "corrections_log.csv", index=False, encoding="utf-8")
 
-    return summary
+    logger.info(f"Validación finalizada con éxito. Resumen: {summary}")
+    return {
+        "summary": summary,
+        "total_corrections": len(all_corrections),
+        "corrections": all_corrections,
+    }
 
 
 if __name__ == "__main__":
-    run_validation()
+    res = run_validation()
+    print("Resumen de validación:", res["summary"])

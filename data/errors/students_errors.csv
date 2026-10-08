@@ -1,4 +1,1 @@
-student_id,first_name,last_name,email,course_id,enrollment_date,status,error_reason
-EST-081,SinApellido,,sin.apellido@colegio.edu.co,CUR-10B,2026-01-15,ACTIVO,Null value in mandatory column: last_name
-EST-005,Duplicado,Test,duplicado.test@colegio.edu.co,CUR-10A,2026-01-15,ACTIVO,Duplicate student_id primary key: EST-005
-EST-082,CursoInvalido,Huérfano,invalido@colegio.edu.co,CUR-99Z,2026-01-15,ACTIVO,Foreign key violation: course_id 'CUR-99Z' does not exist
+error_reason

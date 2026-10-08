@@ -1,0 +1,422 @@
+{
+    "status": "ready",
+    "mapped_sheets": {
+        "estudiantes": {
+            "entity": "students",
+            "confidence": 1.0,
+            "column_mapping": {
+                "estudiante_id": "student_id",
+                "genero": "gender",
+                "fecha_nacimiento": "birth_date",
+                "curso_id": "course_id",
+                "documento": "document_number",
+                "nombres": "first_name",
+                "apellidos": "last_name"
+            },
+            "ignored_columns": [
+                "estado"
+            ],
+            "field_confidences": {
+                "student_id": 1.0,
+                "gender": 1.0,
+                "birth_date": 1.0,
+                "course_id": 1.0,
+                "document_number": 0.95,
+                "first_name": 0.95,
+                "last_name": 0.95
+            },
+            "row_count": 243
+        },
+        "materias": {
+            "entity": "subjects",
+            "confidence": 1.0,
+            "column_mapping": {
+                "materia_id": "subject_id",
+                "nombre_materia": "subject_name"
+            },
+            "ignored_columns": [],
+            "field_confidences": {
+                "subject_id": 1.0,
+                "subject_name": 1.0
+            },
+            "row_count": 10
+        },
+        "curso_materia": {
+            "entity": "course_subjects",
+            "confidence": 1.0,
+            "column_mapping": {
+                "curso_id": "course_id",
+                "materia_id": "subject_id",
+                "docente_id": "teacher_id",
+                "intensidad_horaria": "hours_per_week"
+            },
+            "ignored_columns": [
+                "curso_materia_id"
+            ],
+            "field_confidences": {
+                "course_id": 1.0,
+                "subject_id": 1.0,
+                "teacher_id": 1.0,
+                "hours_per_week": 0.95
+            },
+            "row_count": 121
+        },
+        "evaluaciones": {
+            "entity": "assessments",
+            "confidence": 1.0,
+            "column_mapping": {
+                "evaluacion_id": "assessment_id",
+                "materia_id": "subject_id",
+                "periodo_id": "period_id",
+                "tipo": "type",
+                "porcentaje": "weight",
+                "fecha_evaluacion": "date"
+            },
+            "ignored_columns": [],
+            "field_confidences": {
+                "assessment_id": 1.0,
+                "subject_id": 1.0,
+                "period_id": 1.0,
+                "type": 1.0,
+                "weight": 0.95,
+                "date": 0.95
+            },
+            "row_count": 152
+        },
+        "notas": {
+            "entity": "grades",
+            "confidence": 1.0,
+            "column_mapping": {
+                "nota_id": "grade_id",
+                "estudiante_id": "student_id",
+                "evaluacion_id": "assessment_id",
+                "nota": "score",
+                "fecha_registro": "registration_date"
+            },
+            "ignored_columns": [],
+            "field_confidences": {
+                "grade_id": 1.0,
+                "student_id": 1.0,
+                "assessment_id": 1.0,
+                "score": 1.0,
+                "registration_date": 1.0
+            },
+            "row_count": 36495
+        },
+        "asistencia": {
+            "entity": "attendance",
+            "confidence": 0.93,
+            "column_mapping": {
+                "asistencia_id": "attendance_id",
+                "estudiante_id": "student_id",
+                "periodo_id": "period_id",
+                "dias_clase": "total_classes",
+                "inasistencias": "absences"
+            },
+            "ignored_columns": [
+                "excusas"
+            ],
+            "field_confidences": {
+                "attendance_id": 1.0,
+                "student_id": 1.0,
+                "period_id": 1.0,
+                "total_classes": 1.0,
+                "absences": 1.0
+            },
+            "row_count": 960
+        },
+        "periodos": {
+            "entity": "periods",
+            "confidence": 0.92,
+            "column_mapping": {
+                "periodo_id": "period_id",
+                "fecha_inicio": "start_date",
+                "fecha_fin": "end_date",
+                "nombre": "period_name",
+                "peso_pct": "weight"
+            },
+            "ignored_columns": [
+                "anio"
+            ],
+            "field_confidences": {
+                "period_id": 1.0,
+                "start_date": 1.0,
+                "end_date": 1.0,
+                "period_name": 0.95,
+                "weight": 0.7
+            },
+            "row_count": 4
+        },
+        "cursos": {
+            "entity": "courses",
+            "confidence": 0.87,
+            "column_mapping": {
+                "curso_id": "course_id",
+                "nombre_curso": "course_name",
+                "grado": "level"
+            },
+            "ignored_columns": [],
+            "field_confidences": {
+                "course_id": 1.0,
+                "course_name": 1.0,
+                "level": 0.7
+            },
+            "row_count": 12
+        },
+        "docentes": {
+            "entity": "teachers",
+            "confidence": 0.71,
+            "column_mapping": {
+                "docente_id": "teacher_id",
+                "nombre": "first_name"
+            },
+            "ignored_columns": [],
+            "field_confidences": {
+                "teacher_id": 1.0,
+                "first_name": 1.0
+            },
+            "row_count": 14
+        },
+        "escala_desempeno": {
+            "entity": "performance_scale",
+            "confidence": 0.7,
+            "column_mapping": {
+                "nivel": "level",
+                "nota_min": "min_score",
+                "nota_max": "max_score"
+            },
+            "ignored_columns": [],
+            "field_confidences": {
+                "level": 1.0,
+                "min_score": 0.7,
+                "max_score": 0.7
+            },
+            "row_count": 4
+        }
+    },
+    "ignored_sheets": [
+        {
+            "sheet_name": "diccionario",
+            "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+            "row_count": 22
+        },
+        {
+            "sheet_name": "errores_sembrados",
+            "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+            "row_count": 133
+        }
+    ],
+    "detected_grading_scale": {
+        "scale_type": "0-5",
+        "min_grade": 0.0,
+        "max_grade": 5.0,
+        "passing_grade": 3.0,
+        "scale_table": [
+            {
+                "nivel": "Bajo",
+                "nota_min": 0.0,
+                "nota_max": 2.9
+            },
+            {
+                "nivel": "Básico",
+                "nota_min": 3.0,
+                "nota_max": 3.9
+            },
+            {
+                "nivel": "Alto",
+                "nota_min": 4.0,
+                "nota_max": 4.5
+            },
+            {
+                "nivel": "Superior",
+                "nota_min": 4.6,
+                "nota_max": 5.0
+            }
+        ]
+    },
+    "detected_weight_rule": {
+        "rule": "by_subject_period",
+        "group_cols": [
+            "materia_id",
+            "periodo_id"
+        ],
+        "valid_group_ratio": 0.95
+    },
+    "detected_parameters": {
+        "grade_scale": "0-5",
+        "min_passing_grade": 3.0,
+        "weight_grouping_rule": "(materia, periodo)"
+    },
+    "sheets": [
+        {
+            "sheet_name": "estudiantes",
+            "entity_mapped": "students",
+            "confidence": 1.0,
+            "rows_count": 243,
+            "column_mappings": {
+                "estudiante_id": "student_id",
+                "genero": "gender",
+                "fecha_nacimiento": "birth_date",
+                "curso_id": "course_id",
+                "documento": "document_number",
+                "nombres": "first_name",
+                "apellidos": "last_name"
+            },
+            "ignored_columns": [
+                "estado"
+            ]
+        },
+        {
+            "sheet_name": "materias",
+            "entity_mapped": "subjects",
+            "confidence": 1.0,
+            "rows_count": 10,
+            "column_mappings": {
+                "materia_id": "subject_id",
+                "nombre_materia": "subject_name"
+            },
+            "ignored_columns": []
+        },
+        {
+            "sheet_name": "curso_materia",
+            "entity_mapped": "course_subjects",
+            "confidence": 1.0,
+            "rows_count": 121,
+            "column_mappings": {
+                "curso_id": "course_id",
+                "materia_id": "subject_id",
+                "docente_id": "teacher_id",
+                "intensidad_horaria": "hours_per_week"
+            },
+            "ignored_columns": [
+                "curso_materia_id"
+            ]
+        },
+        {
+            "sheet_name": "evaluaciones",
+            "entity_mapped": "assessments",
+            "confidence": 1.0,
+            "rows_count": 152,
+            "column_mappings": {
+                "evaluacion_id": "assessment_id",
+                "materia_id": "subject_id",
+                "periodo_id": "period_id",
+                "tipo": "type",
+                "porcentaje": "weight",
+                "fecha_evaluacion": "date"
+            },
+            "ignored_columns": []
+        },
+        {
+            "sheet_name": "notas",
+            "entity_mapped": "grades",
+            "confidence": 1.0,
+            "rows_count": 36495,
+            "column_mappings": {
+                "nota_id": "grade_id",
+                "estudiante_id": "student_id",
+                "evaluacion_id": "assessment_id",
+                "nota": "score",
+                "fecha_registro": "registration_date"
+            },
+            "ignored_columns": []
+        },
+        {
+            "sheet_name": "asistencia",
+            "entity_mapped": "attendance",
+            "confidence": 0.93,
+            "rows_count": 960,
+            "column_mappings": {
+                "asistencia_id": "attendance_id",
+                "estudiante_id": "student_id",
+                "periodo_id": "period_id",
+                "dias_clase": "total_classes",
+                "inasistencias": "absences"
+            },
+            "ignored_columns": [
+                "excusas"
+            ]
+        },
+        {
+            "sheet_name": "periodos",
+            "entity_mapped": "periods",
+            "confidence": 0.92,
+            "rows_count": 4,
+            "column_mappings": {
+                "periodo_id": "period_id",
+                "fecha_inicio": "start_date",
+                "fecha_fin": "end_date",
+                "nombre": "period_name",
+                "peso_pct": "weight"
+            },
+            "ignored_columns": [
+                "anio"
+            ]
+        },
+        {
+            "sheet_name": "cursos",
+            "entity_mapped": "courses",
+            "confidence": 0.87,
+            "rows_count": 12,
+            "column_mappings": {
+                "curso_id": "course_id",
+                "nombre_curso": "course_name",
+                "grado": "level"
+            },
+            "ignored_columns": []
+        },
+        {
+            "sheet_name": "docentes",
+            "entity_mapped": "teachers",
+            "confidence": 0.71,
+            "rows_count": 14,
+            "column_mappings": {
+                "docente_id": "teacher_id",
+                "nombre": "first_name"
+            },
+            "ignored_columns": []
+        },
+        {
+            "sheet_name": "escala_desempeno",
+            "entity_mapped": "performance_scale",
+            "confidence": 0.7,
+            "rows_count": 4,
+            "column_mappings": {
+                "nivel": "level",
+                "nota_min": "min_score",
+                "nota_max": "max_score"
+            },
+            "ignored_columns": []
+        },
+        {
+            "sheet_name": "diccionario",
+            "entity_mapped": null,
+            "confidence": 0.0,
+            "rows_count": 22,
+            "column_mappings": {},
+            "ignored_columns": []
+        },
+        {
+            "sheet_name": "errores_sembrados",
+            "entity_mapped": null,
+            "confidence": 0.0,
+            "rows_count": 133,
+            "column_mappings": {},
+            "ignored_columns": []
+        }
+    ],
+    "unmapped_sheets": [
+        {
+            "sheet_name": "diccionario",
+            "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+            "row_count": 22
+        },
+        {
+            "sheet_name": "errores_sembrados",
+            "reason": "Ignorada (no coincide con entidades académicas o es auxiliar)",
+            "row_count": 133
+        }
+    ],
+    "can_process": true,
+    "warnings": []
+}

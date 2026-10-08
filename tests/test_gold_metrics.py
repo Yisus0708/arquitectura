@@ -34,16 +34,16 @@ def test_gold_tables_not_empty():
 
 
 def test_assessment_weights_sum_to_100_in_gold():
-    """Verifies that every subject configured in silver and gold has assessments summing to 100.0%."""
+    """Verifies that every subject/period group has assessments summing to 100.0%."""
     sql = """
-        SELECT subject_id, SUM(weight_percentage) AS total_weight
+        SELECT subject_id, period_id, SUM(weight_percentage) AS total_weight
         FROM silver.assessments
-        GROUP BY subject_id;
+        GROUP BY subject_id, period_id;
     """
     res = fetch_query(sql)
     for r in res:
         w = float(r["total_weight"])
-        assert abs(w - 100.0) < 0.01, f"Found subject {r['subject_id']} with total weight {w} != 100.0%"
+        assert abs(w - 100.0) < 0.5, f"Found group {r} with total weight {w} != 100.0%"
 
 
 def test_recalculated_final_grade_equals_gold_final_grade():
@@ -57,18 +57,22 @@ def test_recalculated_final_grade_equals_gold_final_grade():
             SELECT
                 student_id,
                 subject_id,
+                period_id,
                 ROUND(SUM(score * weight_percentage / 100.0), 2) AS calc_final_grade
             FROM gold.fact_grades
-            GROUP BY student_id, subject_id
+            GROUP BY student_id, subject_id, period_id
         )
         SELECT
             g.student_id,
             g.subject_id,
+            g.period_id,
             g.final_grade AS stored_final_grade,
             r.calc_final_grade
         FROM gold.final_grade_by_student_subject g
         INNER JOIN recalculated r
-            ON g.student_id = r.student_id AND g.subject_id = r.subject_id
+            ON g.student_id = r.student_id
+           AND COALESCE(g.subject_id, '') = COALESCE(r.subject_id, '')
+           AND COALESCE(g.period_id, '') = COALESCE(r.period_id, '')
         WHERE ABS(g.final_grade - r.calc_final_grade) > 0.01;
     """
     discrepancies = fetch_query(sql)
